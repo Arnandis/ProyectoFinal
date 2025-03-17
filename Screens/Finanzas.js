@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 're
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '/home/pau/Escritorio/ProyectoFinal/my-proyect/componentes/FirestoreMethods.js'; // Importa los métodos CRUD
-
+import Encabezado from '../componentes/Encabezado';
 
 const { width } = Dimensions.get('window');
 
@@ -114,6 +114,7 @@ export default function Finanzas() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Encabezado/>
       <Text style={styles.title}>Finanzas</Text>
 
       {/* Campo de Fecha */}

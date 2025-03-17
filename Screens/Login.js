@@ -34,13 +34,14 @@ export default function Login({ navigation }) {
       });
   };
 
-  function SvgTop() { 
+  //repasar y posar una imatge ja descarga pq no apareix el Svg en el movil
+  function SvgTop() {
     return (
       <Svg.Svg
         width={width}
         height={height / 2} // Esto hace que el SVG ocupe la mitad superior de la pantalla
         viewBox={`0 0 ${width} ${height / 2}`}
-        style={styles.svgContainer}
+        style={[styles.svgContainer, { zIndex: -1 }]} // Asegura que el SVG quede completamente en el fondo
       >
         <Defs>
           <LinearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -55,6 +56,7 @@ export default function Login({ navigation }) {
       </Svg.Svg>
     );
   }
+  
 
   return (
     <View style={styles.container}>

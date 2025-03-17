@@ -13,13 +13,14 @@ export default function FormularioRegistro({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(''); // Para manejar errores
 
+  //repasar lo del Svg
   function SvgTop() {
     return (
       <Svg.Svg
         width={width}
-        height={height / 2}
+        height={height / 2} // Esto hace que el SVG ocupe la mitad superior de la pantalla
         viewBox={`0 0 ${width} ${height / 2}`}
-        style={styles.svgContainer}
+        style={[styles.svgContainer, { zIndex: -1 }]} // Asegura que el SVG quede completamente en el fondo
       >
         <Defs>
           <LinearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -34,6 +35,7 @@ export default function FormularioRegistro({ navigation }) {
       </Svg.Svg>
     );
   }
+  
 
   // Función para registrar el usuario en Firebase
   const handleRegister = async () => {
