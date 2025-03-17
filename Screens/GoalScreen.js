@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
 import * as Progress from 'react-native-progress'; // Importamos la librería de barras de progreso
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importamos los iconos
-import UUID from 'react-native-uuid'; // Importamos la librería react-native-uuid
+import UUID from 'react-native-uuid'; 
 
 export default function GoalScreen() {
   // Estados para metas y logros
