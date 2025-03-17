@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
+import tiempoStyles from '/home/pau/Escritorio/ProyectoFinal/my-proyect/styles/tiempoStyles.js'
 
 const { width } = Dimensions.get('window');
 

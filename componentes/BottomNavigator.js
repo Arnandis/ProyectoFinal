@@ -1,29 +1,31 @@
 // components/BottomNavigator.js
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Para los iconos
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Finanzas from '../Screens/Finanzas'; 
 import Tiempo from '../Screens/Tiempo'; 
 import GoalScreen from '../Screens/GoalScreen';
 import RankingScreen from '../Screens/RankingScreen';
+import Encabezado from './Encabezado'; // Importa el Encabezado
 
 const Tab = createBottomTabNavigator();
 
 const BottomNavigator = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Finanzas" // Pantalla inicial
+      initialRouteName="Finanzas"
       screenOptions={({ route }) => ({
+        header: () => <Encabezado title={route.name} />, // Muestra el Encabezado con el nombre de la pantalla
         tabBarIcon: ({ color, size }) => {
           let iconName;
 
           if (route.name === 'Finanzas') {
-            iconName = 'cash'; // Icono para Finanzas
+            iconName = 'cash';
           } else if (route.name === 'Tiempo') {
-            iconName = 'clock-time-four'; // Icono para Tiempo
+            iconName = 'clock-time-four';
           } else if (route.name === 'Logros') {
-            iconName = 'trophy'; // Icono para Logros
-          }else if (route.name === 'Ranking') {
+            iconName = 'trophy';
+          } else if (route.name === 'Ranking') {
             iconName = 'medal';
           }
 
@@ -31,15 +33,15 @@ const BottomNavigator = () => {
         },
       })}
       tabBarOptions={{
-        activeTintColor: 'tomato', // Color cuando la pestaña está activa
-        inactiveTintColor: 'gray', // Color cuando la pestaña está inactiva
-        style: { backgroundColor: '#fff' }, // Color de fondo de la barra
+        activeTintColor: 'tomato',
+        inactiveTintColor: 'gray',
+        style: { backgroundColor: '#fff' },
       }}
     >
       <Tab.Screen name="Finanzas" component={Finanzas} />
       <Tab.Screen name="Tiempo" component={Tiempo} />
       <Tab.Screen name="Logros" component={GoalScreen} />
-      <Tab.Screen name="Ranking" component={RankingScreen} /> 
+      <Tab.Screen name="Ranking" component={RankingScreen} />
     </Tab.Navigator>
   );
 };

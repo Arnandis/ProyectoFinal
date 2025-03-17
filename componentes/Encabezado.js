@@ -1,47 +1,35 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native'; 
 
-const Encabezado = () => {
+const Encabezado = ({ title }) => {
+  const navigation = useNavigation();
+
   return (
-    <View style={styles.container}>
-      {/* Título del encabezado */}
-      <Text style={styles.title}>MyBalance</Text>
-
-      {/* Icono de perfil en la esquina superior derecha */}
-      <TouchableOpacity style={styles.profileIconContainer}>
-        <Image
-          source={require('/home/pau/Escritorio/ProyectoFinal/my-proyect/assets/Perfil.jpeg')} // Cambia esto por la ruta de tu imagen o usa un ícono
-          style={styles.profileIcon}
-        />
+    <View style={styles.header}>
+      <MaterialCommunityIcons name="menu" size={28} color="white" />
+      <Text style={styles.title}>{title}</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
+        <MaterialCommunityIcons name="account" size={28} color="white" />
       </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    height: 80,
-    backgroundColor: '#181818',  // Color de fondo del encabezado
-    justifyContent: 'center',
-    alignItems: 'center',
+  header: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#6200ee',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     color: 'white',
     fontWeight: 'bold',
-  },
-  profileIconContainer: {
-    position: 'absolute',
-    right: 20,  // Alinea el ícono a la derecha
-    top: 20,    // Alinea el ícono un poco hacia abajo
-  },
-  profileIcon: {
-    width: 30,    // Tamaño del ícono
-    height: 30,   // Tamaño del ícono
   },
 });
 

@@ -5,6 +5,9 @@ import * as Svg from 'react-native-svg';
 import { Path, Defs, LinearGradient, Stop } from 'react-native-svg'; 
 import { auth } from '../firebase/firebaseConfig'; // Importa el objeto auth
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Importa el método de autenticación de Firebase
+import { globalStyles } from '../styles/globalStyles';
+
+//tinc que posar tots els estilos dins de una o dos clases, i gastarles com a import per a no repetir codic
 
 //En el Svg dona error de text, tinc q clavar una imatge de fondo que quede be
 const { width, height } = Dimensions.get('window');
@@ -34,7 +37,7 @@ export default function Login({ navigation }) {
       });
   };
 
-  //repasar y posar una imatge ja descarga pq no apareix el Svg en el movil
+  //repasar y posar una imatge ja descarga pq no apareix el Svg en el movil i dona errors
   function SvgTop() {
     return (
       <Svg.Svg

@@ -11,6 +11,8 @@ const { width } = Dimensions.get('window');
 //En els metodos de FirestoreMethods comprovabem que tots els camps estigueren posats en
 //if (fecha && ingresos && gastos.ocio && gastos.alquiler && gastos.juegos && gastos.compras && gastos.festivales &&gastos.otros) {
 //pero nian camps que poden estar a 0 pq alom no has gastat dines en alquiler...
+//mirar que els estilos els agarre del package Styles. 
+
 export default function Finanzas() {
   // Estados para almacenar los ingresos, los gastos y la fecha
   const [ingresos, setIngresos] = useState('');
@@ -114,7 +116,6 @@ export default function Finanzas() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Encabezado/>
       <Text style={styles.title}>Finanzas</Text>
 
       {/* Campo de Fecha */}
