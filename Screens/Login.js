@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useState } from 'react'; //comentario prueba git
 import { StyleSheet, Text, View, TextInput, Dimensions, TouchableOpacity } from 'react-native';
 import * as Svg from 'react-native-svg';
 import { Path, Defs, LinearGradient, Stop } from 'react-native-svg'; 
