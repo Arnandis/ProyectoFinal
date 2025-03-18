@@ -15,6 +15,7 @@ import ProfileScreen from './Screens/ProfileScreen';
 //afegir un menu lateral.
 //idea futuro, que en el perfil apareguen grafics depenguent de si utilitza la app... i que se puga compartir el perfil a amics per a añadir com amigos...
 //en el perfil que puga apareixer els logros personals y de la app que has cumplit.
+//
 
 // Crea el Stack Navigator
 const Stack = createStackNavigator();
