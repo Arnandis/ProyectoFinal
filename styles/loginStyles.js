@@ -1,5 +1,7 @@
 //gastarem estes clases per a posar tots els estilos que necesitarem en la clase login...
 import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Dimensions, TouchableOpacity } from 'react-native';
+//mirar els imports crec que falten
 
 const loginStyles = StyleSheet.create({
     container: {

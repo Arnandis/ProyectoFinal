@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react'; //comentario prueba git
+import React, { useState } from 'react'; 
 import { StyleSheet, Text, View, TextInput, Dimensions, TouchableOpacity } from 'react-native';
 import * as Svg from 'react-native-svg';
 import { Path, Defs, LinearGradient, Stop } from 'react-native-svg'; 
@@ -19,23 +19,27 @@ export default function Login({ navigation }) {
 
   // Maneja el evento de Sign In
   const handleSignIn = () => {
-    // Validación básica de campos vacíos
-    if (!email || !password) {
-      setError("Por favor ingresa tu email y contraseña");
-      return;
-    }
+  // Validación básica de campos vacíos
+  if (!email || !password) {
+    setError("Por favor ingresa tu email y contraseña");
+    return;
+  }
 
-    // Lógica de inicio de sesión con Firebase
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        // Si la autenticación es exitosa, redirige a la pantalla de Finanzas
-        navigation.navigate('Finanzas');
-      })
-      .catch((error) => {
-        // Si hay un error, muestra un mensaje de error
-        setError(error.message);
-      });
-  };
+  // Lógica de inicio de sesión con Firebase
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      // Obtén el UID del usuario autenticado
+      const uid = userCredential.user.uid;
+      console.log('Usuario autenticado con UID:', uid);
+
+      // Redirige a la pantalla de Finanzas y pasa el UID como parámetro
+      navigation.navigate('Finanzas', { uid });
+    })
+    .catch((error) => {
+      // Si hay un error, muestra un mensaje de error
+      setError(error.message);
+    });
+};
 
   //repasar y posar una imatge ja descarga pq no apareix el Svg en el movil i dona errors
   function SvgTop() {

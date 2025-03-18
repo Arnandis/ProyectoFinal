@@ -15,7 +15,7 @@ const BottomNavigator = () => {
     <Tab.Navigator
       initialRouteName="Finanzas"
       screenOptions={({ route }) => ({
-        header: () => <Encabezado title={route.name} />, // Muestra el Encabezado con el nombre de la pantalla
+        header: () => <Encabezado title={route.name} />, // Muestra el Encabezado con el nombre de la pantalla arreglar pq aso es el bottomNavigator
         tabBarIcon: ({ color, size }) => {
           let iconName;
 

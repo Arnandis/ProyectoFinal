@@ -1,19 +1,64 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, Image, StyleSheet, Switch } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const ProfileScreen = () => {
+  const db = getFirestore();
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid; // Obtiene el ID del usuario autenticado
+
   const [user, setUser] = useState({
-    name: 'Juan Pérez',
-    email: 'juan@example.com',
-    bio: '¡Hola! Soy un apasionado de React Native.',
-    photo: null, // Aquí guardaremos la URL de la foto
+    name: '',
+    email: '',
+    bio: '',
+    photo: null,
+    theme: 'light', // 'light' o 'dark'
+    notifications: true, // Activar/desactivar notificaciones
   });
 
-  const handleChange = (key, value) => {
-    setUser({ ...user, [key]: value });
+  // 📌 Cargar datos desde Firestore
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchProfile = async () => {
+      try {
+        const docRef = doc(db, 'users', userId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setUser(docSnap.data());
+        }
+      } catch (error) {
+        console.error('Error al obtener perfil:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [userId]);
+
+  // 📌 Guardar cambios en Firestore
+  const saveProfile = async () => {
+    if (!userId) {
+      console.log('Usuario no autenticado');
+      return;
+    }
+
+    try {
+      await setDoc(doc(db, 'users', userId), user);
+      console.log('Perfil guardado correctamente');
+    } catch (error) {
+      console.error('Error al guardar perfil:', error);
+    }
   };
 
+  // 📌 Manejar cambios en los campos
+  const handleChange = (key, value) => {
+    setUser((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // 📌 Seleccionar imagen
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -27,42 +72,28 @@ const ProfileScreen = () => {
     }
   };
 
-  const saveProfile = () => {
-    // Aquí puedes guardar los cambios en una base de datos o AsyncStorage
-    console.log('Perfil guardado:', user);
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Perfil de Usuario</Text>
 
-      {user.photo && (
-        <Image source={{ uri: user.photo }} style={styles.profileImage} />
-      )}
-
+      {user.photo && <Image source={{ uri: user.photo }} style={styles.profileImage} />}
       <Button title="Cambiar foto" onPress={pickImage} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nombre"
-        value={user.name}
-        onChangeText={(text) => handleChange('name', text)}
-      />
+      <TextInput style={styles.input} placeholder="Nombre" value={user.name} onChangeText={(text) => handleChange('name', text)} />
+      <TextInput style={styles.input} placeholder="Email" value={user.email} onChangeText={(text) => handleChange('email', text)} />
+      <TextInput style={styles.input} placeholder="Biografía" value={user.bio} onChangeText={(text) => handleChange('bio', text)} multiline />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={user.email}
-        onChangeText={(text) => handleChange('email', text)}
-      />
+      {/* Switch para cambiar tema */}
+      <View style={styles.switchContainer}>
+        <Text>Tema oscuro</Text>
+        <Switch value={user.theme === 'dark'} onValueChange={(value) => handleChange('theme', value ? 'dark' : 'light')} />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Biografía"
-        value={user.bio}
-        onChangeText={(text) => handleChange('bio', text)}
-        multiline
-      />
+      {/* Switch para activar/desactivar notificaciones */}
+      <View style={styles.switchContainer}>
+        <Text>Notificaciones</Text>
+        <Switch value={user.notifications} onValueChange={(value) => handleChange('notifications', value)} />
+      </View>
 
       <Button title="Guardar cambios" onPress={saveProfile} />
     </View>
@@ -91,6 +122,12 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     marginBottom: 20,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
   },
 });
 
