@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import Login from './Screens/Login'; 
-import BottomNavigator from './componentes/BottomNavigator';
-import Registro from './Screens/Registro'; 
-import Encabezado from './componentes/Encabezado';
-import ProfileScreen from './Screens/ProfileScreen';
+import Login from './screens/auth/Login'; 
+import BottomNavigator from './components/BottomNavigator';
+import Registro from './screens/auth/Register'; 
+import Encabezado from './components/Encabezado';
+import ProfileScreen from './screens/ProfileScreen';
 
 //Finanzas, Tiempo,Logros y Objetivos,Login,Registrar,Ranking y comparacion,Perfil,.
 //Consejos y Articulos, Notificaciones y recordatorios.

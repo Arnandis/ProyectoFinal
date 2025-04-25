@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
-import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '/home/pau/Escritorio/ProyectoFinal/my-proyect/componentes/FirestoreMethods.js'; // Importa los métodos CRUD
-import Encabezado from '../componentes/Encabezado';
+//import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '/home/pau/Escritorio/ProyectoFinal/my-proyect/componentes/FirestoreMethods.js'; // Importa los métodos CRUD
+import Encabezado from '../components/Encabezado';
 
 const { width } = Dimensions.get('window');
 
