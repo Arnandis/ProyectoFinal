@@ -2,16 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
-//import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '/home/pau/Escritorio/ProyectoFinal/my-proyect/componentes/FirestoreMethods.js'; // Importa los métodos CRUD
-import Encabezado from '../components/Encabezado';
-
+import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '../services/financeService';
 const { width } = Dimensions.get('window');
-
-
-//En els metodos de FirestoreMethods comprovabem que tots els camps estigueren posats en
-//if (fecha && ingresos && gastos.ocio && gastos.alquiler && gastos.juegos && gastos.compras && gastos.festivales &&gastos.otros) {
-//pero nian camps que poden estar a 0 pq alom no has gastat dines en alquiler...
-//mirar que els estilos els agarre del package Styles. 
 
 export default function Finanzas() {
   // Estados para almacenar los ingresos, los gastos y la fecha
@@ -57,51 +49,6 @@ export default function Finanzas() {
     }
   };
 
-  // Crear un gráfico gastamos FirestoreMethods probar si festivales es 0 se guarda
-  const handleGuardar = async () => {
-    if (fecha && ingresos) {
-      await saveGrafico(fecha, ingresos, gastos);
-      Alert.alert('Éxito', 'Gráfico guardado correctamente.');
-    } else {
-      Alert.alert('Error', 'Por favor, complete todos los campos.');
-    }
-  };
-
-  // Leer un gráfico
-  const handleLeer = async () => {
-    if (fecha) {
-      const graficoData = await getGrafico(fecha);
-      if (graficoData.length > 0) {
-        setGrafico(graficoData[0]); // Asignamos el primer gráfico encontrado
-      } else {
-        Alert.alert('No encontrado', 'No hay gráficos guardados para esta fecha.');
-      }
-    } else {
-      Alert.alert('Error', 'Por favor, ingrese una fecha.');
-    }
-  };
-
-  // Actualizar un gráfico
-  const handleActualizar = async () => {
-    if (fecha && ingresos) {
-      const newData = { ingresos, gastos };
-      await updateGrafico(fecha, newData);
-      Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
-    } else {
-      Alert.alert('Error', 'Por favor, complete todos los campos.');
-    }
-  };
-
-  // Eliminar un gráfico
-  const handleEliminar = async () => {
-    if (fecha) {
-      await deleteGrafico(fecha);
-      Alert.alert('Éxito', 'Gráfico eliminado correctamente.');
-      setGrafico(null); // Limpiar gráfico mostrado
-    } else {
-      Alert.alert('Error', 'Por favor, ingrese una fecha.');
-    }
-  };
 
   // Datos para el gráfico
   const chartData = {
@@ -113,7 +60,50 @@ export default function Finanzas() {
       },
     ],
   };
-
+  const handleGuardar = async () => {
+    try {
+      await saveGrafico(fecha, ingresos, gastos);
+      Alert.alert('Éxito', 'Gráfico guardado correctamente.');
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Error al guardar el gráfico.');
+    }
+  };
+  
+  const handleLeer = async () => {
+    try {
+      const data = await getGrafico(fecha);
+      if (data) {
+        setIngresos(data.ingresos.toString());
+        setGastos(data.gastos);
+        Alert.alert('Éxito', 'Gráfico cargado correctamente.');
+      } else {
+        Alert.alert('Info', 'No se encontró un gráfico para esa fecha.');
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Error al obtener el gráfico.');
+    }
+  };
+  
+  const handleActualizar = async () => {
+    try {
+      await updateGrafico(fecha, { ingresos, gastos });
+      Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Error al actualizar el gráfico.');
+    }
+  };
+  
+  const handleEliminar = async () => {
+    try {
+      await deleteGrafico(fecha);
+      Alert.alert('Éxito', 'Gráfico eliminado correctamente.');
+      setIngresos('');
+      setGastos({ ocio: 0, alquiler: 0, festivales: 0, compras: 0, juegos: 0, otros: 0 });
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Error al eliminar el gráfico.');
+    }
+  };
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Finanzas</Text>
@@ -210,13 +200,17 @@ export default function Finanzas() {
 
       {/* Botones de CRUD */}
       <View style={styles.buttonContainer}>
-        <Button title="Verificar Gastos" onPress={checkGastosVsIngresos} />
-        <Button title="Guardar Gráfico" onPress={handleGuardar} />
-        <Button title="Leer Gráfico" onPress={handleLeer} />
-        <Button title="Actualizar Gráfico" onPress={handleActualizar} />
-        <Button title="Eliminar Gráfico" onPress={handleEliminar} />
-        <Button title="Resetear" onPress={() => { setIngresos(''); setGastos({ ocio: 0, alquiler: 0, juegos: 0 ,festivales:0,compras:0,otros:0}) }} />
-      </View>
+  <Button title="Verificar Gastos" onPress={checkGastosVsIngresos} />
+  <Button title="Guardar Gráfico" onPress={handleGuardar} />
+  <Button title="Leer Gráfico" onPress={handleLeer} />
+  <Button title="Actualizar Gráfico" onPress={handleActualizar} />
+  <Button title="Eliminar Gráfico" onPress={handleEliminar} />
+  <Button title="Resetear" onPress={() => {
+    setIngresos('');
+    setGastos({ ocio: 0, alquiler: 0, festivales: 0, compras: 0, juegos: 0, otros: 0 });
+  }} />
+</View>
+
     </ScrollView>
   );
 }
