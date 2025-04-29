@@ -3,6 +3,9 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 're
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '../services/financeService';
+import { finanzasStyles } from '../styles/finanzasStyles';
+import GastoInput from '../components/GastoInput';
+
 const { width } = Dimensions.get('window');
 
 export default function Finanzas() {
@@ -105,12 +108,12 @@ export default function Finanzas() {
   };
   
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Finanzas</Text>
+    <ScrollView contentContainerStyle={finanzasStyles.container}>
+      <Text style={finanzasStyles.title}>Finanzas</Text>
 
       {/* Campo de Fecha */}
       <TextInput
-        style={styles.input}
+        style={finanzasStyles.input}
         placeholder="Ingrese la fecha (YYYY-MM-DD)"
         value={fecha}
         onChangeText={handleFechaChange}
@@ -118,61 +121,30 @@ export default function Finanzas() {
 
       {/* Ingresos */}
       <TextInput
-        style={styles.input}
+        style={finanzasStyles.input}
         placeholder="Ingrese sus ingresos"
         keyboardType="numeric"
         value={ingresos}
         onChangeText={handleIngresosChange}
       />
 
-      <Text style={styles.subtitle}>Categorías de Gastos</Text>
+      <Text style={finanzasStyles.subtitle}>Categorías de Gastos</Text>
 
       {/* Gastos */}
-      <TextInput
-        style={styles.input}
-        placeholder="Gasto en Ocio"
-        keyboardType="numeric"
-        value={gastos.ocio.toString()}
-        onChangeText={(text) => handleGastosChange('ocio', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Gasto en Alquiler"
-        keyboardType="numeric"
-        value={gastos.alquiler.toString()}
-        onChangeText={(text) => handleGastosChange('alquiler', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Gasto en Festivales"
-        keyboardType="numeric"
-        value={gastos.festivales.toString()}
-        onChangeText={(text) => handleGastosChange('festivales', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Gasto en Compras"
-        keyboardType="numeric"
-        value={gastos.compras.toString()}
-        onChangeText={(text) => handleGastosChange('compras', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Gasto en Juegos"
-        keyboardType="numeric"
-        value={gastos.juegos.toString()}
-        onChangeText={(text) => handleGastosChange('juegos', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Gasto en Otros"
-        keyboardType="numeric"
-        value={gastos.otros.toString()}
-        onChangeText={(text) => handleGastosChange('otros', text)}
-      />
+      <GastoInput label="Ocio" value={gastos.ocio} onChange={(text) => handleGastosChange('ocio', text)} />
+
+      <GastoInput label="Alquiler" value={gastos.ocio} onChange={(text) => handleGastosChange('alquiler', text)} />
+
+      <GastoInput label="Festivales" value={gastos.ocio} onChange={(text) => handleGastosChange('festivales', text)} />
+
+      <GastoInput label="Compras" value={gastos.ocio} onChange={(text) => handleGastosChange('compras', text)} />
+
+      <GastoInput label="Juegos" value={gastos.ocio} onChange={(text) => handleGastosChange('juegos', text)} />
+
+      <GastoInput label="Otros" value={gastos.ocio} onChange={(text) => handleGastosChange('otros', text)} />
 
       {/* Gráfico */}
-      <Text style={styles.chartTitle}>Distribución de Gastos</Text>
+      <Text style={finanzasStyles.chartTitle}>Distribución de Gastos</Text>
       <LineChart
         data={chartData}
         width={width - 30} // Se ajusta al tamaño de la pantalla
@@ -195,11 +167,11 @@ export default function Finanzas() {
       />
 
       {/* Mostrar el total de ingresos y gastos */}
-      <Text style={styles.result}>Total de Ingresos: {ingresos}</Text>
-      <Text style={styles.result}>Total de Gastos: {gastos.ocio + gastos.alquiler + gastos.festivales + gastos.compras + gastos.juegos +gastos.otros}</Text>
+      <Text style={finanzasStyles.result}>Total de Ingresos: {ingresos}</Text>
+      <Text style={finanzasStyles.result}>Total de Gastos: {gastos.ocio + gastos.alquiler + gastos.festivales + gastos.compras + gastos.juegos +gastos.otros}</Text>
 
       {/* Botones de CRUD */}
-      <View style={styles.buttonContainer}>
+      <View style={finanzasStyles.buttonContainer}>
   <Button title="Verificar Gastos" onPress={checkGastosVsIngresos} />
   <Button title="Guardar Gráfico" onPress={handleGuardar} />
   <Button title="Leer Gráfico" onPress={handleLeer} />
@@ -214,50 +186,3 @@ export default function Finanzas() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,  // Asegura que el contenido se puede desplazar
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    padding: 20,
-    paddingBottom: 20, 
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  subtitle: {
-    fontSize: 20,
-    marginVertical: 10,
-  },
-  input: {
-    width: '100%',
-    padding: 10,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderRadius: 10,
-    borderColor: '#ddd',
-  },
-  chartTitle: {
-    fontSize: 18,
-    marginVertical: 10,
-  },
-  result: {
-    fontSize: 16,
-    marginVertical: 5,
-  },
-  
-  buttonContainer: {
-    marginTop: 20,
-    width: '70%',
-    marginBottom: 20,
-    gap:15,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 15, 
-    backgroundColor: "#ddd", 
-
-  },
-});

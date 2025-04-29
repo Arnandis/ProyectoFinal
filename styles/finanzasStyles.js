@@ -1,12 +1,13 @@
+// styles/finanzasStyles.js
 import { StyleSheet } from 'react-native';
 
-const finanzasStyle = StyleSheet.create({
+export const finanzasStyles = StyleSheet.create({
   container: {
-    flexGrow: 1,  // Asegura que el contenido se puede desplazar
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
     padding: 20,
-    paddingBottom: 20, 
+    paddingBottom: 20,
   },
   title: {
     fontSize: 30,
@@ -33,16 +34,14 @@ const finanzasStyle = StyleSheet.create({
     fontSize: 16,
     marginVertical: 5,
   },
-  
   buttonContainer: {
     marginTop: 20,
     width: '70%',
     marginBottom: 20,
-    gap:15,
+    gap: 15,
     borderRadius: 20,
     paddingVertical: 8,
-    paddingHorizontal: 15, 
-    backgroundColor: "#ddd", 
-
+    paddingHorizontal: 15,
+    backgroundColor: "#ddd",
   },
 });
