@@ -26,7 +26,7 @@ const normalizarGrafico = (ingresos, gastos) => {
 export const saveGrafico = async (fecha, ingresos, gastos) => {
   try {
     const data = normalizarGrafico(ingresos, gastos);
-    const docRef = doc(db, 'graficos', fecha); // usamos la fecha como ID único
+    const docRef = doc(db, 'graficos_finanzas', fecha); // usamos la fecha como ID único
     await setDoc(docRef, { fecha, ...data });
   } catch (error) {
     console.error('Error al guardar gráfico:', error);

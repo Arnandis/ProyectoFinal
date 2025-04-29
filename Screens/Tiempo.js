@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { tiempoStyles } from '../styles/tiempoStyles';
 import TimeInput from '../components/TimeInput';
 import { Dimensions } from 'react-native';
+import { saveGraficoTiempo, getGraficoTiempo, updateGraficoTiempo, deleteGraficoTiempo } from '../services/tiempoService';
 
 const { width } = Dimensions.get('window');
 
@@ -17,7 +18,8 @@ export default function Tiempo() {
     otros: 0,
   });
 
-  const [fecha, setFecha] = useState(''); 
+  const [fecha, setFecha] = useState('');
+  const [grafico, setGrafico] = useState(null);
 
   const handleInputChange = (category, value) => {
     setTimeData(prevState => ({
@@ -43,12 +45,17 @@ export default function Tiempo() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!fecha) {
       alert('Por favor, ingresa una fecha para guardar.');
       return;
     }
-    alert('Gráfico guardado con fecha ' + fecha);
+    try {
+      await saveGraficoTiempo(fecha, timeData);
+      Alert.alert('Éxito', 'Gráfico guardado con fecha ' + fecha);
+    } catch (error) {
+      Alert.alert('Error', 'Error al guardar el gráfico.');
+    }
   };
 
   const handleReset = () => {
@@ -63,24 +70,63 @@ export default function Tiempo() {
     setFecha('');
   };
 
+  const handleLeer = async () => {
+    try {
+      const data = await getGraficoTiempo(fecha);
+      if (data) {
+        setTimeData(data);
+        Alert.alert('Éxito', 'Gráfico cargado correctamente.');
+      } else {
+        Alert.alert('Info', 'No se encontró un gráfico para esa fecha.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Error al obtener el gráfico.');
+    }
+  };
+
+  const handleActualizar = async () => {
+    try {
+      await updateGraficoTiempo(fecha, timeData);
+      Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
+    } catch (error) {
+      Alert.alert('Error', 'Error al actualizar el gráfico.');
+    }
+  };
+
+  const handleEliminar = async () => {
+    try {
+      await deleteGraficoTiempo(fecha);
+      Alert.alert('Éxito', 'Gráfico eliminado correctamente.');
+      setTimeData({
+        trabajo: 0,
+        estudio: 0,
+        descanso: 0,
+        deporte: 0,
+        familia: 0,
+        otros: 0,
+      });
+      setFecha('');
+    } catch (error) {
+      Alert.alert('Error', 'Error al eliminar el gráfico.');
+    }
+  };
+
   return (
     <View style={tiempoStyles.container}>
       <Text style={tiempoStyles.title}>Distribución del tiempo</Text>
 
-      <View style={tiempoStyles.inputContainer}>
       <TextInput
         placeholder="Fecha (YYYY-MM-DD)"
         style={tiempoStyles.input}
         value={fecha}
         onChangeText={setFecha}
       />
-        <TimeInput placeholder="Minutos de trabajo" onChange={(val) => handleInputChange('trabajo', val)} />
-        <TimeInput placeholder="Minutos de estudio" onChange={(val) => handleInputChange('estudio', val)} />
-        <TimeInput placeholder="Minutos de descanso" onChange={(val) => handleInputChange('descanso', val)} />
-        <TimeInput placeholder="Minutos de deporte" onChange={(val) => handleInputChange('deporte', val)} />
-        <TimeInput placeholder="Minutos en familia" onChange={(val) => handleInputChange('familia', val)} />
-        <TimeInput placeholder="Minutos en otros" onChange={(val) => handleInputChange('otros', val)} />
-      </View>
+      <TimeInput placeholder="Minutos de trabajo" onChange={(val) => handleInputChange('trabajo', val)} />
+      <TimeInput placeholder="Minutos de estudio" onChange={(val) => handleInputChange('estudio', val)} />
+      <TimeInput placeholder="Minutos de descanso" onChange={(val) => handleInputChange('descanso', val)} />
+      <TimeInput placeholder="Minutos de deporte" onChange={(val) => handleInputChange('deporte', val)} />
+      <TimeInput placeholder="Minutos en familia" onChange={(val) => handleInputChange('familia', val)} />
+      <TimeInput placeholder="Minutos en otros" onChange={(val) => handleInputChange('otros', val)} />
 
       {totalTime > 0 && (
         <PieChart
@@ -105,6 +151,18 @@ export default function Tiempo() {
 
       <TouchableOpacity style={tiempoStyles.button} onPress={handleSave}>
         <Text style={tiempoStyles.buttonText}>Guardar gráfico</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={tiempoStyles.button} onPress={handleLeer}>
+        <Text style={tiempoStyles.buttonText}>Leer gráfico</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={tiempoStyles.button} onPress={handleActualizar}>
+        <Text style={tiempoStyles.buttonText}>Actualizar gráfico</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={tiempoStyles.button} onPress={handleEliminar}>
+        <Text style={tiempoStyles.buttonText}>Eliminar gráfico</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={tiempoStyles.button} onPress={handleReset}>
