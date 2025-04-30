@@ -5,6 +5,7 @@ import { Dimensions } from 'react-native';
 import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '../services/financeService';
 import { finanzasStyles } from '../styles/finanzasStyles';
 import GastoInput from '../components/GastoInput';
+import { getAuth } from 'firebase/auth';
 
 const { width } = Dimensions.get('window');
 
@@ -18,10 +19,10 @@ export default function Finanzas() {
     compras:0,
     juegos: 0,
     otros:0,
-
   });
   const [fecha, setFecha] = useState(''); // Nuevo estado para la fecha
   const [grafico, setGrafico] = useState(null); // Estado para almacenar el gráfico recuperado
+  const userId = getAuth().currentUser?.uid;
 
   // Funciones para manejar los cambios en los inputs
   const handleIngresosChange = (text) => {
@@ -63,9 +64,14 @@ export default function Finanzas() {
       },
     ],
   };
+  
   const handleGuardar = async () => {
+    if (!userId) {
+      Alert.alert('Error', 'Usuario no autenticado.');
+      return;
+    }
     try {
-      await saveGrafico(fecha, ingresos, gastos);
+      await saveGrafico(userId, fecha, ingresos, gastos);
       Alert.alert('Éxito', 'Gráfico guardado correctamente.');
     } catch (error) {
       Alert.alert('Error', error.message || 'Error al guardar el gráfico.');
@@ -73,8 +79,12 @@ export default function Finanzas() {
   };
   
   const handleLeer = async () => {
+    if (!userId) {
+      Alert.alert('Error', 'Usuario no autenticado.');
+      return;
+    }
     try {
-      const data = await getGrafico(fecha);
+      const data = await getGrafico(userId, fecha);
       if (data) {
         setIngresos(data.ingresos.toString());
         setGastos(data.gastos);
@@ -88,8 +98,12 @@ export default function Finanzas() {
   };
   
   const handleActualizar = async () => {
+    if (!userId) {
+      Alert.alert('Error', 'Usuario no autenticado.');
+      return;
+    }
     try {
-      await updateGrafico(fecha, { ingresos, gastos });
+      await updateGrafico(userId, fecha, { ingresos, gastos });
       Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
     } catch (error) {
       Alert.alert('Error', error.message || 'Error al actualizar el gráfico.');
@@ -97,8 +111,12 @@ export default function Finanzas() {
   };
   
   const handleEliminar = async () => {
+    if (!userId) {
+      Alert.alert('Error', 'Usuario no autenticado.');
+      return;
+    }
     try {
-      await deleteGrafico(fecha);
+      await deleteGrafico(userId, fecha);
       Alert.alert('Éxito', 'Gráfico eliminado correctamente.');
       setIngresos('');
       setGastos({ ocio: 0, alquiler: 0, festivales: 0, compras: 0, juegos: 0, otros: 0 });
@@ -106,6 +124,7 @@ export default function Finanzas() {
       Alert.alert('Error', error.message || 'Error al eliminar el gráfico.');
     }
   };
+  
   
   return (
     <ScrollView contentContainerStyle={finanzasStyles.container}>
@@ -132,16 +151,12 @@ export default function Finanzas() {
 
       {/* Gastos */}
       <GastoInput label="Ocio" value={gastos.ocio} onChange={(text) => handleGastosChange('ocio', text)} />
+      <GastoInput label="Alquiler" value={gastos.alquiler} onChange={(text) => handleGastosChange('alquiler', text)} />
+      <GastoInput label="Festivales" value={gastos.festivales} onChange={(text) => handleGastosChange('festivales', text)} />
+      <GastoInput label="Compras" value={gastos.compras} onChange={(text) => handleGastosChange('compras', text)} />
+      <GastoInput label="Juegos" value={gastos.juegos} onChange={(text) => handleGastosChange('juegos', text)} />
+      <GastoInput label="Otros" value={gastos.otros} onChange={(text) => handleGastosChange('otros', text)} />
 
-      <GastoInput label="Alquiler" value={gastos.ocio} onChange={(text) => handleGastosChange('alquiler', text)} />
-
-      <GastoInput label="Festivales" value={gastos.ocio} onChange={(text) => handleGastosChange('festivales', text)} />
-
-      <GastoInput label="Compras" value={gastos.ocio} onChange={(text) => handleGastosChange('compras', text)} />
-
-      <GastoInput label="Juegos" value={gastos.ocio} onChange={(text) => handleGastosChange('juegos', text)} />
-
-      <GastoInput label="Otros" value={gastos.ocio} onChange={(text) => handleGastosChange('otros', text)} />
 
       {/* Gráfico */}
       <Text style={finanzasStyles.chartTitle}>Distribución de Gastos</Text>

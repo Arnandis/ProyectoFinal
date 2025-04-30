@@ -1,18 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; 
+import { Menu } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 
 const Encabezado = ({ title }) => {
   const navigation = useNavigation();
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const openMenu = () => setMenuVisible(true);
+  const closeMenu = () => setMenuVisible(false);
 
   return (
     <View style={styles.header}>
-      <MaterialCommunityIcons name="menu" size={28} color="white" />
+      <Menu
+        visible={menuVisible}
+        onDismiss={closeMenu}
+        anchor={
+          <TouchableOpacity onPress={openMenu}>
+            <MaterialCommunityIcons name="menu" size={28} color="white" />
+          </TouchableOpacity>
+        }
+        contentStyle={{ backgroundColor: 'white' }}
+      >
+        <Menu.Item
+          onPress={() => {
+            closeMenu();
+            navigation.navigate('HistorialGrafico');
+          }}
+          title="Ver Historial"
+          leadingIcon="history"
+        />
+        <Menu.Item
+          onPress={() => {
+            closeMenu();
+            navigation.navigate('Perfil');
+          }}
+          title="Perfil"
+          leadingIcon="account"
+        />
+      </Menu>
+
       <Text style={styles.title}>{title}</Text>
-      <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
-        <MaterialCommunityIcons name="account" size={28} color="white" />
-      </TouchableOpacity>
+
+      {/* Placeholder para mantener el título centrado */}
+      <View style={{ width: 28 }} />
     </View>
   );
 };

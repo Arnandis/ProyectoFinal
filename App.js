@@ -6,6 +6,9 @@ import BottomNavigator from './components/BottomNavigator';
 import Registro from './screens/auth/Register'; 
 import Encabezado from './components/Encabezado';
 import ProfileScreen from './screens/ProfileScreen';
+import { Provider as PaperProvider } from 'react-native-paper';
+import HistorialGraficos from './screens/HistorialGraficos';
+import DetalleGrafico from './screens/DetalleGrafico';
 
 //Finanzas, Tiempo,Logros y Objetivos,Login,Registrar,Ranking y comparacion,Perfil,.
 //Consejos y Articulos, Notificaciones y recordatorios.
@@ -34,18 +37,20 @@ const linking = {
 
 export default function App() {
   return (
-    <NavigationContainer linking={linking}>
-      {/* Definimos el Stack Navigator para que Login sea accesible */}
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Registro" component={Registro} />
-        {/* Aquí se agregan las pantallas de Finanzas y Tiempo */}
-        <Stack.Screen name="Finanzas" component={BottomNavigator} />
-        <Stack.Screen name="Tiempo" component={BottomNavigator}/>
-        <Stack.Screen name="Logros" component={BottomNavigator} />
-        <Stack.Screen name="Ranking" component={BottomNavigator} />
-        <Stack.Screen name="Perfil" component={ProfileScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <PaperProvider>
+      <NavigationContainer linking={linking}>
+        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="Registro" component={Registro} />
+          <Stack.Screen name="Finanzas" component={BottomNavigator} />
+          <Stack.Screen name="Tiempo" component={BottomNavigator} />
+          <Stack.Screen name="Logros" component={BottomNavigator} />
+          <Stack.Screen name="Ranking" component={BottomNavigator} />
+          <Stack.Screen name="Perfil" component={ProfileScreen} />
+          <Stack.Screen name="HistorialGrafico" component={HistorialGraficos} />
+          <Stack.Screen name="DetalleGrafico" component={DetalleGrafico} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
