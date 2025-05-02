@@ -18,7 +18,7 @@ const Encabezado = ({ title }) => {
         onDismiss={closeMenu}
         anchor={
           <TouchableOpacity onPress={openMenu}>
-            <MaterialCommunityIcons name="menu" size={28} color="white" />
+            <MaterialCommunityIcons name="menu" size={40} color="white" />
           </TouchableOpacity>
         }
         contentStyle={{ backgroundColor: 'white' }}
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#6200ee',
-    paddingVertical: 10,
+    paddingVertical: 22,
     paddingHorizontal: 15,
   },
   title: {

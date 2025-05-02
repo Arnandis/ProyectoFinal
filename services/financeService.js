@@ -5,7 +5,9 @@ import {
   updateDoc,
   deleteDoc,
   collection,
-  getDocs
+  getDocs,
+  query, 
+  where
 } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 
@@ -92,6 +94,27 @@ export const getAllGraficos = async (userId) => {
     return graficos;
   } catch (error) {
     console.error('Error al obtener todos los gráficos:', error);
+    throw error;
+  }
+};
+
+// Obtener gráficos de finanzas por fecha
+export const getGraficosFinanzasPorFechas = async (userId, fechaInicio, fechaFin) => {
+  try {
+    const graficosRef = collection(db, 'usuarios', userId, 'graficos_finanzas');
+    const q = query(
+      graficosRef,
+      where('fecha', '>=', fechaInicio),
+      where('fecha', '<=', fechaFin)
+    );
+    const querySnapshot = await getDocs(q);
+    const graficos = [];
+    querySnapshot.forEach(doc => {
+      graficos.push(doc.data());
+    });
+    return graficos;
+  } catch (error) {
+    console.error('Error al filtrar gráficos de finanzas:', error);
     throw error;
   }
 };

@@ -5,7 +5,9 @@ import {
   updateDoc,
   deleteDoc,
   collection,
-  getDocs
+  getDocs,
+  query,
+  where
 } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 
@@ -88,6 +90,25 @@ export const getAllGraficosTiempo = async (userId) => {
     return graficos;
   } catch (error) {
     console.error('Error al obtener gráficos de tiempo:', error);
+    throw error;
+  }
+};
+
+//obtener los graficos filtrado por fechas
+export const getGraficosTiempoPorFechas = async (userId, fechaInicio, fechaFin) => {
+  try {
+    const ref = collection(db, 'usuarios', userId, 'graficos_tiempo');
+    const q = query(
+      ref,
+      where('fecha', '>=', fechaInicio),
+      where('fecha', '<=', fechaFin)
+    );
+
+    const snapshot = await getDocs(q);
+    const graficos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return graficos;
+  } catch (error) {
+    console.error('Error al obtener gráficos por fecha:', error);
     throw error;
   }
 };

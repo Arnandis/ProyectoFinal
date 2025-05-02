@@ -1,32 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { getAllGraficos } from '../../services/financeService';
-import { getAllGraficosTiempo } from '../../services/tiempoService';
+import { View, Text, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { getAllGraficos, getGraficosFinanzasPorFechas } from '../../services/financeService';
+import { getAllGraficosTiempo, getGraficosTiempoPorFechas } from '../../services/tiempoService';
 import { getAuth } from 'firebase/auth';
 
 export default function HistorialGraficos({ navigation }) {
   const [graficos, setGraficos] = useState([]);
-  const [tipoGrafico, setTipoGrafico] = useState('finanzas'); // 'finanzas' o 'tiempo'
+  const [tipoGrafico, setTipoGrafico] = useState('finanzas');
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
   const userId = getAuth().currentUser?.uid;
 
   useEffect(() => {
     cargarGraficos();
   }, [tipoGrafico]);
 
+  const ordenarPorFechaDesc = (datos) => {
+    return datos.sort((a, b) => b.fecha.localeCompare(a.fecha));
+  };
+
   const cargarGraficos = async () => {
     if (!userId) return;
-
     try {
+      let data = [];
+
       if (tipoGrafico === 'finanzas') {
-        const data = await getAllGraficos(userId);
-        setGraficos(data);
-      } else if (tipoGrafico === 'tiempo') {
-        const data = await getAllGraficosTiempo(userId);
-        setGraficos(data);
+        data = await getAllGraficos(userId);
+      } else {
+        data = await getAllGraficosTiempo(userId);
       }
+
+      setGraficos(ordenarPorFechaDesc(data));
     } catch (error) {
       console.error('Error al cargar gráficos:', error);
     }
+  };
+
+  const filtrarPorFechas = async () => {
+    if (!userId || !fechaInicio || !fechaFin) return;
+    try {
+      let data = [];
+
+      if (tipoGrafico === 'tiempo') {
+        data = await getGraficosTiempoPorFechas(userId, fechaInicio, fechaFin);
+      } else {
+        data = await getGraficosFinanzasPorFechas(userId, fechaInicio, fechaFin);
+      }
+
+      setGraficos(ordenarPorFechaDesc(data));
+    } catch (error) {
+      console.error('Error al filtrar gráficos:', error);
+    }
+  };
+
+  const limpiarFiltro = () => {
+    setFechaInicio('');
+    setFechaFin('');
+    cargarGraficos();
   };
 
   const renderItem = ({ item }) => (
@@ -48,7 +78,6 @@ export default function HistorialGraficos({ navigation }) {
           <Text>Deporte: {item.tiempos?.deporte ?? 0} min</Text>
           <Text>Familia: {item.tiempos?.familia ?? 0} min</Text>
           <Text>Otros: {item.tiempos?.otros ?? 0} min</Text>
-
         </>
       )}
     </TouchableOpacity>
@@ -80,6 +109,38 @@ export default function HistorialGraficos({ navigation }) {
         >
           <Text style={{ color: '#fff' }}>Tiempo</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={{ marginBottom: 16 }}>
+        <Text>Fecha inicio (YYYY-MM-DD):</Text>
+        <TextInput
+          value={fechaInicio}
+          onChangeText={setFechaInicio}
+          placeholder="2024-01-01"
+          style={{ borderWidth: 1, padding: 8, marginBottom: 8, borderRadius: 6 }}
+        />
+        <Text>Fecha fin (YYYY-MM-DD):</Text>
+        <TextInput
+          value={fechaFin}
+          onChangeText={setFechaFin}
+          placeholder="2024-12-31"
+          style={{ borderWidth: 1, padding: 8, marginBottom: 8, borderRadius: 6 }}
+        />
+
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <TouchableOpacity
+            onPress={filtrarPorFechas}
+            style={{ backgroundColor: '#28a745', padding: 10, borderRadius: 8, flex: 1, marginRight: 8 }}
+          >
+            <Text style={{ color: '#fff', textAlign: 'center' }}>Filtrar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={limpiarFiltro}
+            style={{ backgroundColor: '#dc3545', padding: 10, borderRadius: 8, flex: 1 }}
+          >
+            <Text style={{ color: '#fff', textAlign: 'center' }}>Limpiar Filtro</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
