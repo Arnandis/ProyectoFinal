@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
-import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '../services/financeService';
-import { finanzasStyles } from '../styles/finanzasStyles';
-import GastoInput from '../components/GastoInput';
+import { saveGrafico, getGrafico, updateGrafico, deleteGrafico } from '../../services/financeService';
+import { finanzasStyles } from '../../styles/finanzasStyles';
+import GastoInput from '../../components/GastoInput';
 import { getAuth } from 'firebase/auth';
 
 const { width } = Dimensions.get('window');

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Button, ScrollView, Alert } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
-import { getAllGraficosFinanzas } from '../services/financeService';
-import { getAllGraficosTiempo } from '../services/tiempoService';
+import { getAllGraficosFinanzas } from '../../services/financeService';
+import { getAllGraficosTiempo } from '../../services/tiempoService';
 
 const { width } = Dimensions.get('window');
 
@@ -22,9 +22,42 @@ export default function DetalleGrafico({ route }) {
       ? await getAllGraficosFinanzas()
       : await getAllGraficosTiempo();
 
-    // Excluir el actual
     const otros = data.filter(g => g.fecha !== grafico.fecha);
     setGraficosDisponibles(otros);
+  };
+
+  const sanitize = (val) => {
+    const num = Number(val);
+    return isNaN(num) ? 0 : num;
+  };
+
+  const renderGrafico = (g, color = 'rgba(0,0,255,1)') => {
+    if (!g) return { labels: [], datasets: [] };
+
+    const labels =
+      tipo === 'Finanzas'
+        ? ['Ocio', 'Alquiler', 'Festivales', 'Compras', 'Juegos', 'Otros']
+        : Object.keys(g.tiempos || {});
+
+    const data =
+      tipo === 'Finanzas'
+        ? [
+            sanitize(g.gastos?.ocio),
+            sanitize(g.gastos?.alquiler),
+            sanitize(g.gastos?.festivales),
+            sanitize(g.gastos?.compras),
+            sanitize(g.gastos?.juegos),
+            sanitize(g.gastos?.otros)
+          ]
+        : labels.map(key => sanitize(g.tiempos?.[key]));
+
+    console.log("Labels:", labels);
+    console.log("Data:", data);
+
+    return {
+      labels,
+      datasets: [{ data, strokeWidth: 2, color: () => color }]
+    };
   };
 
   const handleSeleccionarComparar = () => {
@@ -33,66 +66,25 @@ export default function DetalleGrafico({ route }) {
       return;
     }
 
-    // Por ahora solo selecciona el primero distinto
     setOtroGrafico(graficosDisponibles[0]);
     setComparar(true);
   };
 
-  const renderGrafico = (g, color = 'rgba(0,0,255,1)') => {
-    if (!g) return { labels: [], datasets: [] };
-  
-    const labels =
-      tipo === 'Finanzas'
-        ? ['Ocio', 'Alquiler', 'Festivales', 'Compras', 'Juegos', 'Otros']
-        : Object.keys(g.tiempos || {});
-  
-    const data =
-      tipo === 'Finanzas'
-        ? [
-            g.gastos?.ocio ?? 0,
-            g.gastos?.alquiler ?? 0,
-            g.gastos?.festivales ?? 0,
-            g.gastos?.compras ?? 0,
-            g.gastos?.juegos ?? 0,
-            g.gastos?.otros ?? 0
-          ]
-        : labels.map(key => g.tiempos?.[key] ?? 0);
-  
-    return {
-      labels,
-      datasets: [{ data, strokeWidth: 2, color: () => color }]
-    };
-  };
-  
-
   const renderRecomendacion = () => {
     if (!grafico) return null;
-  
+
     if (tipo === 'Finanzas') {
-      const ahorro =
-        grafico.ingresos -
-        Object.values(grafico.gastos || {}).reduce((a, b) => a + b, 0);
-      if (ahorro >= 300) {
-        return '¡Con tus ahorros podrías comprarte un móvil Xiaomi!';
-      } else if (ahorro > 0) {
-        return 'Estás ahorrando bien, sigue así.';
-      } else {
-        return 'Estás gastando más de lo que ganas. ¡Cuidado!';
-      }
+      const ahorro = grafico.ingresos - Object.values(grafico.gastos || {}).reduce((a, b) => a + b, 0);
+      if (ahorro >= 300) return '¡Con tus ahorros podrías comprarte un móvil Xiaomi!';
+      if (ahorro > 0) return 'Estás ahorrando bien, sigue así.';
+      return 'Estás gastando más de lo que ganas. ¡Cuidado!';
     } else {
-      const totalHoras =
-        grafico.totalHoras ??
-        Object.values(grafico.tiempos || {}).reduce((a, b) => a + b, 0);
-      if (totalHoras >= 30) {
-        return '¡Has hecho el equivalente a dos maratones este mes!';
-      } else if (totalHoras >= 15) {
-        return '¡Muy buen ritmo de actividad!';
-      } else {
-        return 'Puedes mejorar tu distribución del tiempo, ¡ánimo!';
-      }
+      const totalHoras = grafico.totalHoras ?? Object.values(grafico.tiempos || {}).reduce((a, b) => a + b, 0);
+      if (totalHoras >= 30) return '¡Has hecho el equivalente a dos maratones este mes!';
+      if (totalHoras >= 15) return '¡Muy buen ritmo de actividad!';
+      return 'Puedes mejorar tu distribución del tiempo, ¡ánimo!';
     }
   };
-  
 
   return (
     <ScrollView style={{ padding: 16 }}>

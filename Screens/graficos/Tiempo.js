@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
-import { tiempoStyles } from '../styles/tiempoStyles';
-import TimeInput from '../components/TimeInput';
+import { tiempoStyles } from '../../styles/tiempoStyles';
+import TimeInput from '../../components/TimeInput';
 import { Dimensions } from 'react-native';
-import { saveGraficoTiempo, getGraficoTiempo, updateGraficoTiempo, deleteGraficoTiempo } from '../services/tiempoService';
+import { saveGraficoTiempo, getGraficoTiempo, updateGraficoTiempo, deleteGraficoTiempo } from '../../services/tiempoService';
+import { getAuth } from 'firebase/auth';
 
 const { width } = Dimensions.get('window');
 
@@ -20,6 +21,7 @@ export default function Tiempo() {
 
   const [fecha, setFecha] = useState('');
   const [grafico, setGrafico] = useState(null);
+  const userId = getAuth().currentUser?.uid;
 
   const handleInputChange = (category, value) => {
     setTimeData(prevState => ({
@@ -50,14 +52,18 @@ export default function Tiempo() {
       alert('Por favor, ingresa una fecha para guardar.');
       return;
     }
+    if (!userId) {
+      alert('Usuario no autenticado.');
+      return;
+    }
     try {
-      await saveGraficoTiempo(fecha, timeData);
+      await saveGraficoTiempo(userId, fecha, timeData);
       Alert.alert('Éxito', 'Gráfico guardado con fecha ' + fecha);
     } catch (error) {
       Alert.alert('Error', 'Error al guardar el gráfico.');
     }
   };
-
+  
   const handleReset = () => {
     setTimeData({
       trabajo: 0,
@@ -72,7 +78,7 @@ export default function Tiempo() {
 
   const handleLeer = async () => {
     try {
-      const data = await getGraficoTiempo(fecha);
+      const data = await getGraficoTiempo(userId,fecha);
       if (data) {
         setTimeData(data);
         Alert.alert('Éxito', 'Gráfico cargado correctamente.');
@@ -86,7 +92,7 @@ export default function Tiempo() {
 
   const handleActualizar = async () => {
     try {
-      await updateGraficoTiempo(fecha, timeData);
+      await updateGraficoTiempo(userId, fecha, timeData);
       Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
     } catch (error) {
       Alert.alert('Error', 'Error al actualizar el gráfico.');
@@ -95,7 +101,7 @@ export default function Tiempo() {
 
   const handleEliminar = async () => {
     try {
-      await deleteGraficoTiempo(fecha);
+      await deleteGraficoTiempo(userId, fecha);
       Alert.alert('Éxito', 'Gráfico eliminado correctamente.');
       setTimeData({
         trabajo: 0,

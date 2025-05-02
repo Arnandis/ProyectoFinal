@@ -7,8 +7,9 @@ import Registro from './screens/auth/Register';
 import Encabezado from './components/Encabezado';
 import ProfileScreen from './screens/ProfileScreen';
 import { Provider as PaperProvider } from 'react-native-paper';
-import HistorialGraficos from './screens/HistorialGraficos';
-import DetalleGrafico from './screens/DetalleGrafico';
+import HistorialGraficos from './screens/graficos/HistorialGraficos';
+import DetalleGrafico from './screens/graficos/DetalleGrafico';
+import DetalleGraficoTiempo from './screens/graficos/DetalleGraficoTiempo';
 
 //Finanzas, Tiempo,Logros y Objetivos,Login,Registrar,Ranking y comparacion,Perfil,.
 //Consejos y Articulos, Notificaciones y recordatorios.
@@ -49,6 +50,7 @@ export default function App() {
           <Stack.Screen name="Perfil" component={ProfileScreen} />
           <Stack.Screen name="HistorialGrafico" component={HistorialGraficos} />
           <Stack.Screen name="DetalleGrafico" component={DetalleGrafico} />
+          <Stack.Screen name="DetalleGraficoTiempo" component={DetalleGraficoTiempo} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

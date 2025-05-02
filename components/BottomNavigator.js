@@ -2,8 +2,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Finanzas from '../screens/Finanzas'; 
-import Tiempo from '../screens/Tiempo'; 
+import Finanzas from '../screens/graficos/Finanzas'; 
+import Tiempo from '../screens/graficos/Tiempo';
 import GoalScreen from '../screens/GoalScreen';
 import RankingScreen from '../screens/RankingScreen';
 import Encabezado from './Encabezado'; // Importa el Encabezado
