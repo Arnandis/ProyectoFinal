@@ -1,36 +1,58 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Button, Alert, Dimensions } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
+import {
+  View,
+  Text,
+  ScrollView,
+  Button,
+  Alert,
+  Dimensions,
+  Modal,
+  Pressable,
+  FlatList,
+  StyleSheet
+} from 'react-native';
+import { PieChart } from 'react-native-chart-kit';
 import { getAllGraficosTiempo } from '../../services/tiempoService';
+import { getAuth } from 'firebase/auth';
 
 const { width } = Dimensions.get('window');
 
 export default function DetalleGraficoTiempo({ route }) {
   const { grafico } = route.params;
+
   const [comparar, setComparar] = useState(false);
   const [otroGrafico, setOtroGrafico] = useState(null);
   const [graficosDisponibles, setGraficosDisponibles] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const userId = getAuth().currentUser?.uid;
 
   useEffect(() => {
     cargarGraficosDisponibles();
   }, []);
 
   const cargarGraficosDisponibles = async () => {
-    const data = await getAllGraficosTiempo();
+    if (!userId) return;
+    const data = await getAllGraficosTiempo(userId);
     const otros = data.filter(g => g.fecha !== grafico.fecha);
     setGraficosDisponibles(otros);
   };
 
   const sanitize = (val) => isNaN(Number(val)) ? 0 : Number(val);
 
-  const renderGrafico = (g, color = 'rgba(0, 0, 255, 1)') => {
+  const crearPieData = (g) => {
+    const colores = ['#1e90ff', '#ff8c00', '#32cd32', '#8a2be2', '#ff1493', '#808080'];
     const labels = ['Trabajo', 'Estudio', 'Descanso', 'Deporte', 'Familia', 'Otros'];
-    const data = labels.map(label => sanitize(g?.tiempos?.[label.toLowerCase()]));
 
-    return {
-      labels,
-      datasets: [{ data, strokeWidth: 2, color: () => color }]
-    };
+    return labels.map((label, idx) => {
+      const key = label.toLowerCase();
+      return {
+        name: label,
+        population: sanitize(g?.tiempos?.[key]),
+        color: colores[idx],
+        legendFontColor: '#333',
+        legendFontSize: 14,
+      };
+    }).filter(d => d.population > 0); // para evitar mostrar sectores vacíos
   };
 
   const handleSeleccionarComparar = () => {
@@ -38,8 +60,7 @@ export default function DetalleGraficoTiempo({ route }) {
       Alert.alert('No hay otros gráficos disponibles para comparar');
       return;
     }
-    setOtroGrafico(graficosDisponibles[0]);
-    setComparar(true);
+    setModalVisible(true);
   };
 
   const renderRecomendacion = (graficoTiempo) => {
@@ -52,7 +73,6 @@ export default function DetalleGraficoTiempo({ route }) {
     if (descanso > 300) return 'Has pasado mucho tiempo descansando, intenta equilibrar con más estudio o deporte.';
     if (tiempos.deporte >= 150) return '¡Buen trabajo manteniéndote activo!';
     if (total < 200) return 'Puedes distribuir más tu tiempo, hay margen de mejora.';
-
     return '¡Buena organización! Sigue así.';
   };
 
@@ -62,19 +82,17 @@ export default function DetalleGraficoTiempo({ route }) {
         Detalle del gráfico (Tiempo) - {grafico.fecha}
       </Text>
 
-      <LineChart
-        data={renderGrafico(grafico)}
+      <PieChart
+        data={crearPieData(grafico)}
         width={width - 30}
         height={220}
+        accessor="population"
+        backgroundColor="transparent"
         chartConfig={{
-          backgroundColor: '#fff',
-          backgroundGradientFrom: '#f0f8ff',
-          backgroundGradientTo: '#ffffff',
-          decimalPlaces: 0,
-          color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
-          labelColor: () => '#000',
+          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
         }}
-        style={{ marginVertical: 20, borderRadius: 16 }}
+        paddingLeft="15"
+        absolute
       />
 
       <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 8 }}>
@@ -84,25 +102,54 @@ export default function DetalleGraficoTiempo({ route }) {
 
       <Button title="Comparar con otro gráfico" onPress={handleSeleccionarComparar} />
 
+      {/* MODAL DE SELECCIÓN */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Selecciona un gráfico</Text>
+            <FlatList
+              data={graficosDisponibles}
+              keyExtractor={(item) => item.fecha}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setOtroGrafico(item);
+                    setComparar(true);
+                    setModalVisible(false);
+                  }}
+                >
+                  <Text>{item.fecha}</Text>
+                </Pressable>
+              )}
+            />
+            <Button title="Cancelar" onPress={() => setModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
+
       {comparar && otroGrafico && (
         <>
           <Text style={{ fontSize: 16, fontWeight: 'bold', marginTop: 20 }}>
             Comparando con: {otroGrafico.fecha}
           </Text>
 
-          <LineChart
-            data={renderGrafico(otroGrafico, 'rgba(255, 0, 0, 1)')}
+          <PieChart
+            data={crearPieData(otroGrafico)}
             width={width - 30}
             height={220}
+            accessor="population"
+            backgroundColor="transparent"
             chartConfig={{
-              backgroundColor: '#fff',
-              backgroundGradientFrom: '#ffe0f0',
-              backgroundGradientTo: '#ffffff',
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(255, 0, 0, ${opacity})`,
-              labelColor: () => '#000',
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
             }}
-            style={{ marginVertical: 20, borderRadius: 16 }}
+            paddingLeft="15"
+            absolute
           />
 
           <Text style={{ fontWeight: '600' }}>
@@ -114,3 +161,28 @@ export default function DetalleGraficoTiempo({ route }) {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 16,
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  modalItem: {
+    paddingVertical: 12,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
+  },
+});
