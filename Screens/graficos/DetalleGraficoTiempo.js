@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import {
 import { PieChart } from 'react-native-chart-kit';
 import { getAllGraficosTiempo } from '../../services/tiempoService';
 import { getAuth } from 'firebase/auth';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +27,8 @@ export default function DetalleGraficoTiempo({ route }) {
   const [graficosDisponibles, setGraficosDisponibles] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const userId = getAuth().currentUser?.uid;
+
+  const chartRef = useRef();
 
   useEffect(() => {
     cargarGraficosDisponibles();
@@ -52,7 +56,7 @@ export default function DetalleGraficoTiempo({ route }) {
         legendFontColor: '#333',
         legendFontSize: 14,
       };
-    }).filter(d => d.population > 0); // para evitar mostrar sectores vacíos
+    }).filter(d => d.population > 0);
   };
 
   const handleSeleccionarComparar = () => {
@@ -63,17 +67,66 @@ export default function DetalleGraficoTiempo({ route }) {
     setModalVisible(true);
   };
 
-  const renderRecomendacion = (graficoTiempo) => {
-    const tiempos = graficoTiempo.tiempos || {};
-    const estudio = sanitize(tiempos.estudio);
-    const descanso = sanitize(tiempos.descanso);
-    const total = Object.values(tiempos).reduce((a, b) => a + sanitize(b), 0);
+  const calcularComparacion = (actual, comparado) => {
+    const tiemposActual = actual.tiempos || {};
+    const tiemposComparado = comparado.tiempos || {};
 
-    if (estudio > 200) return '¡Has estudiado más de 200 minutos! Eso equivale a leer unas 70 páginas de Harry Potter.';
-    if (descanso > 300) return 'Has pasado mucho tiempo descansando, intenta equilibrar con más estudio o deporte.';
-    if (tiempos.deporte >= 150) return '¡Buen trabajo manteniéndote activo!';
-    if (total < 200) return 'Puedes distribuir más tu tiempo, hay margen de mejora.';
-    return '¡Buena organización! Sigue así.';
+    const labels = ['trabajo', 'estudio', 'descanso', 'deporte', 'familia', 'otros'];
+    const comparaciones = [];
+
+    const diferencias = labels.map((actividad) => {
+      const actualTiempo = sanitize(tiemposActual[actividad]);
+      const comparadoTiempo = sanitize(tiemposComparado[actividad]);
+      const diferencia = actualTiempo - comparadoTiempo;
+      const porcentaje = comparadoTiempo === 0
+        ? (actualTiempo > 0 ? 100 : 0)
+        : Math.round((diferencia / comparadoTiempo) * 100);
+
+      return {
+        actividad,
+        actual: actualTiempo,
+        comparado: comparadoTiempo,
+        diferencia,
+        porcentaje,
+      };
+    });
+
+    const mayorActual = diferencias.reduce((prev, curr) => curr.actual > prev.actual ? curr : prev, diferencias[0]);
+    const menorActual = diferencias.reduce((prev, curr) => curr.actual < prev.actual ? curr : prev, diferencias[0]);
+
+    comparaciones.push(
+      `🟢 Has pasado más tiempo en **${mayorActual.actividad}**: ${mayorActual.actual} min (${Math.abs(mayorActual.porcentaje)}% ${mayorActual.diferencia >= 0 ? 'más' : 'menos'} que el otro gráfico).`
+    );
+
+    comparaciones.push(
+      `🔵 Has pasado menos tiempo en **${menorActual.actividad}**: ${menorActual.actual} min (${Math.abs(menorActual.porcentaje)}% ${menorActual.diferencia >= 0 ? 'más' : 'menos'} que el otro gráfico).`
+    );
+
+    if (mayorActual.actividad === 'descanso' && mayorActual.actual > 300) {
+      comparaciones.push('💡 Estás dedicando mucho tiempo a descansar. ¿Puedes redistribuir parte de ese tiempo a otras actividades como estudio o deporte?');
+    }
+
+    if (mayorActual.actividad === 'otros' && mayorActual.actual > 200) {
+      comparaciones.push('💡 Gran parte de tu tiempo está en "otros". Considera identificar mejor en qué se va ese tiempo para aprovecharlo más.');
+    }
+
+    return comparaciones;
+  };
+
+  const handleCompartirGrafico = async () => {
+    try {
+      const uri = await captureRef(chartRef, {
+        format: 'png',
+        quality: 1,
+      });
+
+      await Sharing.shareAsync(uri, {
+        dialogTitle: 'Compartir gráfico de tiempo',
+      });
+    } catch (error) {
+      console.error('Error al compartir:', error);
+      Alert.alert('Error al compartir el gráfico');
+    }
   };
 
   return (
@@ -82,25 +135,24 @@ export default function DetalleGraficoTiempo({ route }) {
         Detalle del gráfico (Tiempo) - {grafico.fecha}
       </Text>
 
-      <PieChart
-        data={crearPieData(grafico)}
-        width={width - 30}
-        height={220}
-        accessor="population"
-        backgroundColor="transparent"
-        chartConfig={{
-          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
-        }}
-        paddingLeft="15"
-        absolute
-      />
+      <View ref={chartRef} collapsable={false}>
+        <PieChart
+          data={crearPieData(grafico)}
+          width={width - 30}
+          height={220}
+          accessor="population"
+          backgroundColor="transparent"
+          chartConfig={{
+            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
+          }}
+          paddingLeft="15"
+          absolute
+        />
+      </View>
 
-      <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 8 }}>
-        Recomendación personalizada:
-      </Text>
-      <Text style={{ marginBottom: 16 }}>{renderRecomendacion(grafico)}</Text>
+      <Button title="Compartir gráfico" onPress={handleCompartirGrafico} />
 
-      <Button title="Comparar con otro gráfico" onPress={handleSeleccionarComparar} />
+      <Button title="Comparar con otro gráfico" onPress={handleSeleccionarComparar} style={{ marginTop: 12 }} />
 
       {/* MODAL DE SELECCIÓN */}
       <Modal
@@ -152,10 +204,16 @@ export default function DetalleGraficoTiempo({ route }) {
             absolute
           />
 
-          <Text style={{ fontWeight: '600' }}>
-            Consejo del gráfico comparado:
+          <Text style={{ fontSize: 16, fontWeight: 'bold', marginTop: 16 }}>
+            Comparación personalizada:
           </Text>
-          <Text style={{ marginBottom: 16 }}>{renderRecomendacion(otroGrafico)}</Text>
+          {calcularComparacion(grafico, otroGrafico).map((linea, idx) => (
+            <Text key={idx} style={{ marginBottom: 6 }}>{linea}</Text>
+          ))}
+
+          <View style={{ marginTop: 12 }}>
+            <Button title="Compartir gráfico con comparación" onPress={handleCompartirGrafico} />
+          </View>
         </>
       )}
     </ScrollView>

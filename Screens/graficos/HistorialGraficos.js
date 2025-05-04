@@ -61,7 +61,13 @@ export default function HistorialGraficos({ navigation }) {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('DetalleGraficoTiempo', { grafico: item, tipo: tipoGrafico })}
+      onPress={() => {
+        if (tipoGrafico === 'finanzas') {
+          navigation.navigate('DetalleGraficoFinanzas', { grafico: item });
+        } else {
+          navigation.navigate('DetalleGraficoTiempo', { grafico: item });
+        }
+      }}
       style={{ padding: 16, borderBottomWidth: 1, borderColor: '#ccc' }}
     >
       <Text style={{ fontWeight: 'bold' }}>{item.fecha}</Text>
@@ -82,7 +88,7 @@ export default function HistorialGraficos({ navigation }) {
       )}
     </TouchableOpacity>
   );
-
+  
   return (
     <View style={{ flex: 1, padding: 16 }}>
       <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>Historial de Gráficos</Text>

@@ -49,7 +49,7 @@ export default function App() {
           <Stack.Screen name="Ranking" component={BottomNavigator} />
           <Stack.Screen name="Perfil" component={ProfileScreen} />
           <Stack.Screen name="HistorialGrafico" component={HistorialGraficos} />
-          <Stack.Screen name="DetalleGrafico" component={DetalleGrafico} />
+          <Stack.Screen name="DetalleGraficoFinanzas" component={DetalleGrafico} />
           <Stack.Screen name="DetalleGraficoTiempo" component={DetalleGraficoTiempo} />
         </Stack.Navigator>
       </NavigationContainer>
