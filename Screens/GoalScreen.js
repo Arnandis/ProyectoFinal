@@ -1,66 +1,96 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
-import * as Progress from 'react-native-progress'; // Importamos la librería de barras de progreso
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importamos los iconos
-import UUID from 'react-native-uuid'; 
+import * as Progress from 'react-native-progress';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import UUID from 'react-native-uuid';
+import { getAuth } from 'firebase/auth';
+import { saveGoal, getGoals, deleteGoal, updateGoalProgress } from '../services/goalService';
 
 export default function GoalScreen() {
-  // Estados para metas y logros
   const [goals, setGoals] = useState([]);
   const [goalName, setGoalName] = useState('');
   const [goalTarget, setGoalTarget] = useState('');
   const [goalProgress, setGoalProgress] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-  // Función para agregar metas
-  const addGoal = () => {
-    if (goalName && goalTarget && goalProgress) {
-      const newGoal = {
-        id: UUID.v4(),  // Generamos un id único con react-native-uuid
-        name: goalName,
-        target: parseFloat(goalTarget),
-        progress: parseFloat(goalProgress),
-      };
-      setGoals(prevGoals => [
-        ...prevGoals,  // Agregamos el nuevo objetivo al array de metas
-        newGoal
-      ]);
-      setGoalName('');
-      setGoalTarget('');
-      setGoalProgress('');
+  const userId = getAuth().currentUser?.uid;
+
+  useEffect(() => {
+    if (userId) {
+      cargarMetas();
+    }
+  }, [userId]);
+
+  const cargarMetas = async () => {
+    try {
+      const metas = await getGoals(userId);
+      setGoals(metas);
+    } catch (error) {
+      console.error('Error al cargar las metas:', error);
     }
   };
 
-  // Función para actualizar el progreso
-  const updateProgress = (id, progress) => {
+  const addGoal = async () => {
+    if (goalName && goalTarget && goalProgress && startDate && endDate) {
+      const newGoal = {
+        id: UUID.v4(),
+        name: goalName.trim().toLowerCase(),
+        target: parseFloat(goalTarget),
+        progress: parseFloat(goalProgress),
+        startDate,
+        endDate,
+      };
+
+      try {
+        await saveGoal(userId, newGoal);
+        setGoals(prev => [...prev, newGoal]);
+        setGoalName('');
+        setGoalTarget('');
+        setGoalProgress('');
+        setStartDate('');
+        setEndDate('');
+      } catch (error) {
+        console.error('Error al guardar la meta:', error);
+      }
+    } else {
+      Alert.alert('Completa todos los campos', 'Por favor, rellena todos los campos para añadir la meta.');
+    }
+  };
+
+  const updateProgress = async (id, progress) => {
     const updatedGoals = goals.map((goal) =>
-      goal.id === id ? { ...goal, progress: progress } : goal
+      goal.id === id ? { ...goal, progress } : goal
     );
     setGoals(updatedGoals);
 
-    // Verificar si el objetivo ha sido alcanzado
-    const goal = updatedGoals.find(g => g.id === id);
+    try {
+      await updateGoalProgress(userId, id, progress);
+    } catch (error) {
+      console.error('Error al actualizar progreso:', error);
+    }
 
-    // Si el progreso es mayor o igual al objetivo, mostrar alerta
+    const goal = updatedGoals.find(g => g.id === id);
     if (goal && goal.progress >= goal.target) {
       Alert.alert('¡Felicidades!', 'Has cumplido tu objetivo');
     }
   };
 
-  // Función para borrar una meta
-  const deleteGoal = (id) => {
+  const eliminarGoal = (id) => {
     Alert.alert(
       "¿Estás seguro?",
       "¿Quieres eliminar este objetivo?",
       [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
-          onPress: () => {
-            // Filtramos las metas para eliminar la meta seleccionada
-            setGoals(goals.filter(goal => goal.id !== id));
+          onPress: async () => {
+            try {
+              await deleteGoal(userId, id);
+              setGoals(goals.filter(goal => goal.id !== id));
+            } catch (error) {
+              console.error('Error al eliminar la meta:', error);
+            }
           },
         },
       ]
@@ -71,42 +101,51 @@ export default function GoalScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Mis Logros y Objetivos</Text>
 
-      {/* Input para agregar metas */}
       <TextInput
         style={styles.input}
-        placeholder="Nombre del objetivo (Ej: Estudiar, Deporte)"
+        placeholder="Nombre del objetivo (Ej: Estudiar)"
         value={goalName}
         onChangeText={setGoalName}
       />
       <TextInput
         style={styles.input}
-        placeholder="Objetivo (Ej: 3 Horas)"
+        placeholder="Objetivo en minutos (Ej: 180)"
         keyboardType="numeric"
         value={goalTarget}
         onChangeText={setGoalTarget}
       />
       <TextInput
         style={styles.input}
-        placeholder="Progreso actual (Ej: 2 Horas)"
+        placeholder="Progreso actual en minutos (Ej: 60)"
         keyboardType="numeric"
         value={goalProgress}
         onChangeText={setGoalProgress}
       />
-      
-      {/* Botón para agregar la meta */}
+      <TextInput
+        style={styles.input}
+        placeholder="Fecha de inicio (YYYY-MM-DD)"
+        value={startDate}
+        onChangeText={setStartDate}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Fecha de fin (YYYY-MM-DD)"
+        value={endDate}
+        onChangeText={setEndDate}
+      />
       <Button title="Agregar Meta" onPress={addGoal} />
 
-      {/* Mostrar las metas con las barras de progreso */}
       {goals.length > 0 && (
         <View style={styles.goalsContainer}>
           {goals.map((goal) => (
             <View key={goal.id} style={styles.goalContainer}>
               <Text style={styles.goalText}>{goal.name}</Text>
               <Text style={styles.goalText}>
-                {goal.progress} / {goal.target} horas
+                {goal.progress} / {goal.target} minutos
               </Text>
-
-              {/* Barra de progreso */}
+              <Text style={styles.goalSubText}>
+                Desde: {goal.startDate} — Hasta: {goal.endDate}
+              </Text>
               <Progress.Bar
                 progress={goal.progress / goal.target}
                 width={200}
@@ -114,23 +153,19 @@ export default function GoalScreen() {
                 borderRadius={5}
                 color={goal.progress >= goal.target ? '#4CAF50' : '#FF5722'}
               />
-
-              {/* Botón para actualizar el progreso */}
               <TextInput
                 style={styles.input}
-                placeholder="Actualizar progreso"
+                placeholder="Actualizar progreso en minutos"
                 keyboardType="numeric"
                 value={String(goal.progress)}
                 onChangeText={(text) => updateProgress(goal.id, parseFloat(text))}
               />
-              
-              {/* Botón de eliminar con icono de basura */}
-              <MaterialCommunityIcons 
-                name="delete" 
-                size={24} 
-                color="red" 
-                style={styles.deleteIcon} 
-                onPress={() => deleteGoal(goal.id)} 
+              <MaterialCommunityIcons
+                name="delete"
+                size={24}
+                color="red"
+                style={styles.deleteIcon}
+                onPress={() => eliminarGoal(goal.id)}
               />
             </View>
           ))}
@@ -142,10 +177,10 @@ export default function GoalScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,  // Asegura que el contenido se puede desplazar
+    flexGrow: 1,
     padding: 20,
     backgroundColor: '#f4f4f4',
-    paddingBottom: 20,  // Agregar espacio en la parte inferior
+    paddingBottom: 20,
   },
   title: {
     fontSize: 24,
@@ -177,6 +212,11 @@ const styles = StyleSheet.create({
   },
   goalText: {
     fontSize: 18,
+    marginBottom: 10,
+  },
+  goalSubText: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 10,
   },
   deleteIcon: {

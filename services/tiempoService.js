@@ -24,14 +24,45 @@ const normalizarTiempo = (tiempos) => {
   return tiemposNormalizados;
 };
 
+// Nueva función para actualizar progreso de objetivos activos
+const actualizarProgresoObjetivos = async (userId, fecha, tiempos) => {
+  try {
+    const goalsRef = collection(db, 'usuarios', userId, 'goals');
+    const q = query(goalsRef,
+      where('startDate', '<=', fecha),
+      where('endDate', '>=', fecha)
+    );
+    const snapshot = await getDocs(q);
 
-// Guardar gráfico de tiempo en la subcolección del usuario
+    for (const docSnap of snapshot.docs) {
+      const goal = docSnap.data();
+      const actividad = goal.name.toLowerCase(); // nombre del objetivo = categoría
+      const tiempoActividad = tiempos[actividad];
+
+      if (tiempoActividad && tiempoActividad > 0) {
+        const nuevoProgreso = (goal.progress || 0) + tiempoActividad;
+        const goalRef = doc(db, 'usuarios', userId, 'goals', goal.id);
+        await updateDoc(goalRef, { progress: nuevoProgreso });
+      }
+    }
+  } catch (error) {
+    console.error('Error al actualizar progreso de metas:', error);
+    throw error;
+  }
+};
+
+// Guardar gráfico de tiempo y actualizar objetivos automáticamente
 export const saveGraficoTiempo = async (userId, fecha, tiempos) => {
   try {
     const datosNormalizados = normalizarTiempo(tiempos);
     const totalHoras = Object.values(datosNormalizados).reduce((a, b) => a + b, 0);
+
+    // Guardar gráfico
     const docRef = doc(db, 'usuarios', userId, 'graficos_tiempo', fecha);
     await setDoc(docRef, { fecha, tiempos: datosNormalizados, totalHoras });
+
+    // Actualizar metas activas
+    await actualizarProgresoObjetivos(userId, fecha, datosNormalizados);
   } catch (error) {
     console.error('Error al guardar gráfico de tiempo:', error);
     throw error;
@@ -111,4 +142,4 @@ export const getGraficosTiempoPorFechas = async (userId, fechaInicio, fechaFin) 
     console.error('Error al obtener gráficos por fecha:', error);
     throw error;
   }
-};
+};  
