@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import * as Progress from 'react-native-progress';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import UUID from 'react-native-uuid';
 import { getAuth } from 'firebase/auth';
 import { saveGoal, getGoals, deleteGoal, updateGoalProgress } from '../services/goalService';
+import { enviarNotificacionInmediata,enviarNotificacionProgramada } from '../utils/notifications';
 
 export default function GoalScreen() {
   const [goals, setGoals] = useState([]);
@@ -13,6 +14,7 @@ export default function GoalScreen() {
   const [goalProgress, setGoalProgress] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [filtroActivo, setFiltroActivo] = useState('pendientes'); // 'pendientes' | 'caducados' | 'cumplidos'
 
   const userId = getAuth().currentUser?.uid;
 
@@ -41,7 +43,7 @@ export default function GoalScreen() {
         startDate,
         endDate,
       };
-
+  
       try {
         await saveGoal(userId, newGoal);
         setGoals(prev => [...prev, newGoal]);
@@ -50,6 +52,31 @@ export default function GoalScreen() {
         setGoalProgress('');
         setStartDate('');
         setEndDate('');
+  
+        // 🟢 Notificación inmediata al crear la meta
+        await enviarNotificacionInmediata(
+          '¡Meta creada!',
+          `Has creado la meta "${newGoal.name}". ¡Mucho ánimo! 💪`
+        );
+  
+        // 🟡 Notificación programada un día antes de la fecha de fin
+        const fechaFin = new Date(endDate);
+        const fechaRecordatorio = new Date(fechaFin);
+        fechaRecordatorio.setDate(fechaFin.getDate() - 1);
+
+        // Verifica que la diferencia entre HOY y la fechaRecordatorio sea exactamente 1 día
+        const hoy = new Date();
+        const diferenciaDias = Math.ceil((fechaRecordatorio - hoy) / (1000 * 60 * 60 * 24));
+
+        if (diferenciaDias === 1) {
+          await enviarNotificacionProgramada(
+            '⏰ Recordatorio de meta',
+            `Mañana vence tu meta "${newGoal.name}". ¡A por ello!`,
+            { date: fechaRecordatorio }
+          );
+        }
+
+  
       } catch (error) {
         console.error('Error al guardar la meta:', error);
       }
@@ -57,7 +84,7 @@ export default function GoalScreen() {
       Alert.alert('Completa todos los campos', 'Por favor, rellena todos los campos para añadir la meta.');
     }
   };
-
+  
   const updateProgress = async (id, progress) => {
     const updatedGoals = goals.map((goal) =>
       goal.id === id ? { ...goal, progress } : goal
@@ -97,6 +124,24 @@ export default function GoalScreen() {
     );
   };
 
+  const hoy = new Date();
+
+  const metasFiltradas = goals.filter(goal => {
+    const fechaFinal = new Date(goal.endDate);
+    const cumplido = goal.progress >= goal.target;
+
+    if (filtroActivo === 'pendientes') {
+      return !cumplido && fechaFinal >= hoy;
+    }
+    if (filtroActivo === 'caducados') {
+      return !cumplido && fechaFinal < hoy;
+    }
+    if (filtroActivo === 'cumplidos') {
+      return cumplido;
+    }
+    return true;
+  });
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Mis Logros y Objetivos</Text>
@@ -135,9 +180,28 @@ export default function GoalScreen() {
       />
       <Button title="Agregar Meta" onPress={addGoal} />
 
-      {goals.length > 0 && (
+      {/* Filtros */}
+      <View style={styles.filtrosContainer}>
+        {['pendientes', 'caducados', 'cumplidos'].map(tipo => (
+          <TouchableOpacity
+            key={tipo}
+            onPress={() => setFiltroActivo(tipo)}
+            style={[
+              styles.filtroBtn,
+              filtroActivo === tipo && styles.filtroBtnActivo
+            ]}
+          >
+            <Text style={filtroActivo === tipo ? styles.filtroTextActivo : styles.filtroText}>
+              {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Lista de metas filtradas */}
+      {metasFiltradas.length > 0 ? (
         <View style={styles.goalsContainer}>
-          {goals.map((goal) => (
+          {metasFiltradas.map((goal) => (
             <View key={goal.id} style={styles.goalContainer}>
               <Text style={styles.goalText}>{goal.name}</Text>
               <Text style={styles.goalText}>
@@ -170,6 +234,10 @@ export default function GoalScreen() {
             </View>
           ))}
         </View>
+      ) : (
+        <Text style={{ textAlign: 'center', marginTop: 20 }}>
+          No hay metas para este filtro.
+        </Text>
       )}
     </ScrollView>
   );
@@ -196,8 +264,30 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderColor: '#ddd',
   },
+  filtrosContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 20,
+  },
+  filtroBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#ddd',
+  },
+  filtroBtnActivo: {
+    backgroundColor: '#2196F3',
+  },
+  filtroText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  filtroTextActivo: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   goalsContainer: {
-    marginTop: 20,
+    marginTop: 10,
   },
   goalContainer: {
     backgroundColor: '#fff',
