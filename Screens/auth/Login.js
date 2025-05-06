@@ -8,6 +8,8 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../../firebase/firebaseConfig'; // ✅ Usa el auth que tú ya exportas
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase/firebaseConfig'; // Asegúrate de tener exportado `db`
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -51,15 +53,38 @@ export default function Login({ navigation }) {
       setError("Por favor ingresa tu email y contraseña");
       return;
     }
-
+  
     try {
       const { uid } = await loginWithEmail(email, password);
+  
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
+  
+      if (!userSnap.exists()) {
+        // Crear documento si no existe
+        await setDoc(userRef, {
+          id: uid,
+          email: email.toLowerCase(),
+          name: '', // Lo puedes pedir en el registro y guardar
+          estrellas: 0,
+          photoUrl: '',
+          amigos: [],
+          peticionesPendientes: [],
+          idioma: 'es',
+          creadoEn: serverTimestamp(),
+        });
+        console.log('Nuevo usuario creado en Firestore');
+      } else {
+        console.log('Usuario ya existente en Firestore');
+      }
+  
       navigation.navigate('Finanzas', { uid });
+  
     } catch (err) {
+      console.error(err);
       setError(err.message);
     }
   };
-
   return (
     <View style={loginStyles.container}>
       <Text style={loginStyles.titulo}>¡Hola!</Text>

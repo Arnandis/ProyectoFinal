@@ -12,6 +12,9 @@ import DetalleGraficoTiempo from './screens/graficos/DetalleGraficoTiempo';
 
 // 👇 IMPORTA LA FUNCIÓN DE NOTIFICACIONES
 import { pedirPermisosNotificaciones } from './utils/notifications';
+import RetosScreen from './screens/RetosScreen';
+import AñadirAmigosScreen from './screens/AñadirAmigosScreen';
+import SolicitudesAmistadScreen from './screens/SolicitudesAmistadScreen';
 
 const Stack = createStackNavigator();
 
@@ -46,6 +49,9 @@ export default function App() {
           <Stack.Screen name="HistorialGrafico" component={HistorialGraficos} />
           <Stack.Screen name="DetalleGraficoFinanzas" component={DetalleGrafico} />
           <Stack.Screen name="DetalleGraficoTiempo" component={DetalleGraficoTiempo} />
+          <Stack.Screen name="Retos" component={RetosScreen} />
+          <Stack.Screen name="AñadirAmigos" component={AñadirAmigosScreen} />
+          <Stack.Screen name="Solicitudes" component={SolicitudesAmistadScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

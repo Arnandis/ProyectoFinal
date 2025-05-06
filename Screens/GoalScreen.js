@@ -6,6 +6,7 @@ import UUID from 'react-native-uuid';
 import { getAuth } from 'firebase/auth';
 import { saveGoal, getGoals, deleteGoal, updateGoalProgress } from '../services/goalService';
 import { enviarNotificacionInmediata,enviarNotificacionProgramada } from '../utils/notifications';
+import { useNavigation } from '@react-navigation/native';
 
 export default function GoalScreen() {
   const [goals, setGoals] = useState([]);
@@ -17,6 +18,7 @@ export default function GoalScreen() {
   const [filtroActivo, setFiltroActivo] = useState('pendientes'); // 'pendientes' | 'caducados' | 'cumplidos'
 
   const userId = getAuth().currentUser?.uid;
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (userId) {
@@ -145,6 +147,18 @@ export default function GoalScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Mis Logros y Objetivos</Text>
+      <TouchableOpacity 
+  onPress={() => navigation.navigate('Retos')}
+  style={{
+    backgroundColor: '#FFD700',
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 10,
+    alignItems: 'center',
+  }}
+>
+  <Text style={{ color: '#000', fontWeight: 'bold' }}>Ir a Retos</Text>
+</TouchableOpacity>
 
       <TextInput
         style={styles.input}

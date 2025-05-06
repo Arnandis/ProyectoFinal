@@ -39,6 +39,22 @@ const Encabezado = ({ title }) => {
           title="Perfil"
           leadingIcon="account"
         />
+        <Menu.Item
+          onPress={() => {
+            closeMenu();
+            navigation.navigate('AñadirAmigos');  // Navegación a la pantalla de Añadir Amigos
+          }}
+          title="Añadir Amistad"
+          leadingIcon="account-plus"
+        />
+        <Menu.Item
+          onPress={() => {
+            closeMenu();
+            navigation.navigate('Solicitudes');  // Navegación a la pantalla de Añadir Amigos
+          }}
+          title="Solicitudes Amistad"
+          leadingIcon="account-plus"
+        />
       </Menu>
 
       <Text style={styles.title}>{title}</Text>
