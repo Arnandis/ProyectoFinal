@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, FlatList, Alert, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Button,
+  FlatList,
+  Alert,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase/firebaseConfig';
 import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
@@ -22,7 +32,6 @@ export default function SolicitudesAmistadScreen() {
           const data = userSnap.data();
           const idsSolicitantes = data.peticionesPendientes || [];
 
-          // Obtener información de cada solicitante
           const detalles = await Promise.all(
             idsSolicitantes.map(async (id) => {
               const docRef = doc(db, 'users', id);
@@ -47,15 +56,17 @@ export default function SolicitudesAmistadScreen() {
   }, []);
 
   const aceptarSolicitud = async (otroUsuarioId) => {
+    const userSnap = await getDoc(doc(db, 'users', userId));
+    const data = userSnap.data();
+
+    if (!data.peticionesPendientes?.includes(otroUsuarioId)) {
+      Alert.alert('No puedes aceptar esta solicitud');
+      return;
+    }
+
     try {
       setLoading(true);
-      const userRef = doc(db, 'users', userId);
       const otroUsuarioRef = doc(db, 'users', otroUsuarioId);
-
-      await updateDoc(userRef, {
-        peticionesPendientes: arrayRemove(otroUsuarioId),
-        amigos: arrayUnion(otroUsuarioId),
-      });
 
       await updateDoc(otroUsuarioRef, {
         peticionesPendientes: arrayRemove(userId),
@@ -98,45 +109,63 @@ export default function SolicitudesAmistadScreen() {
 
   if (cargandoSolicitudes) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" />
-        <Text>Cargando solicitudes...</Text>
+      <View style={styles.centeredContainer}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={styles.loadingText}>Cargando solicitudes...</Text>
       </View>
     );
   }
 
   return (
-    <View className="p-4">
-      <Text className="text-xl font-bold mb-4">Solicitudes de amistad</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Solicitudes de amistad</Text>
       {solicitudes.length === 0 ? (
-        <Text>No tienes solicitudes pendientes.</Text>
+        <Text style={styles.noRequests}>No tienes solicitudes pendientes.</Text>
       ) : (
         <FlatList
           data={solicitudes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View className="bg-white p-4 rounded-xl shadow mb-4">
-              <View className="flex-row items-center">
-                {item.fotoPerfil ? (
-                  <Image source={{ uri: item.fotoPerfil }} className="w-12 h-12 rounded-full mr-4" />
+            <View style={styles.card}>
+              <View style={styles.userInfo}>
+                {item.photo ? (
+                  <Image source={{ uri: item.photo }} style={styles.avatar} />
                 ) : (
-                  <View className="w-12 h-12 rounded-full bg-gray-300 mr-4 justify-center items-center">
-                    <Text>{item.username?.charAt(0)?.toUpperCase()}</Text>
+                  <View style={styles.placeholderAvatar}>
+                    <Text style={styles.avatarInitial}>
+                      {item.username?.charAt(0)?.toUpperCase() || '?'}
+                    </Text>
                   </View>
                 )}
-                <View className="flex-1">
-                  <Text className="font-semibold">{item.username || item.email}</Text>
-                  <Text className="text-gray-500">{item.email}</Text>
+                <View style={styles.userTextContainer}>
+                  <Text style={styles.username}>{item.username || item.email}</Text>
+                  <Text style={styles.email}>{item.email}</Text>
                 </View>
               </View>
 
-              <View className="flex-row mt-3 space-x-2">
-                <Button title="Aceptar" onPress={() => aceptarSolicitud(item.id)} disabled={loading} />
-                <Button title="Rechazar" onPress={() => rechazarSolicitud(item.id)} disabled={loading} />
-                <Button
-                  title="Ver perfil"
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.acceptButton]}
+                  onPress={() => aceptarSolicitud(item.id)}
+                  disabled={loading}
+                >
+                  <Text style={styles.buttonText}>Aceptar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.rejectButton]}
+                  onPress={() => rechazarSolicitud(item.id)}
+                  disabled={loading}
+                >
+                  <Text style={styles.buttonText}>Rechazar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.viewProfileButton]}
                   onPress={() => navigation.navigate('PerfilUsuario', { userId: item.id })}
-                />
+                >
+                  <Text style={styles.buttonText}>Ver perfil</Text>
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -145,3 +174,103 @@ export default function SolicitudesAmistadScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    backgroundColor: '#F9FAFB',
+    flex: 1,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 16,
+    color: '#1F2937',
+  },
+  noRequests: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  placeholderAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarInitial: {
+    fontSize: 18,
+    color: '#374151',
+    fontWeight: 'bold',
+  },
+  userTextContainer: {
+    flex: 1,
+  },
+  username: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  email: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    justifyContent: 'space-between',
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginHorizontal: 4,
+    alignItems: 'center',
+  },
+  acceptButton: {
+    backgroundColor: '#10B981',
+  },
+  rejectButton: {
+    backgroundColor: '#EF4444',
+  },
+  viewProfileButton: {
+    backgroundColor: '#3B82F6',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  centeredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    fontSize: 16,
+    color: '#6B7280',
+  },
+});

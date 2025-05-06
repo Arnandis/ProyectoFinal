@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, updateDoc, arrayUnion, query, where, getDocs, collection } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 
 export default function AñadirAmigosScreen() {
-  const [input, setInput] = useState(''); // Campo de entrada para nombre o correo
+  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const userId = getAuth().currentUser?.uid;
 
-  // Función para enviar la solicitud de amistad
   const enviarSolicitud = async () => {
     if (!input) {
       Alert.alert('Error', 'Por favor, ingresa un nombre de usuario o correo electrónico');
@@ -21,89 +20,98 @@ export default function AñadirAmigosScreen() {
       const userRef = doc(db, 'users', userId);
       const userSnap = await getDoc(userRef);
 
-      if (userSnap.exists()) {
-        const data = userSnap.data();
+      if (!userSnap.exists()) {
+        setLoading(false);
+        return;
+      }
 
-        // Verificar si el usuario ya es amigo
-        if (data.amigos && data.amigos.includes(input)) {
-          Alert.alert('¡Ya son amigos!', 'No puedes enviar una solicitud a un amigo.');
-          setLoading(false);
-          return;
-        }
+      const data = userSnap.data();
 
-        // Verificar si ya existe la solicitud pendiente
-        if (data.peticionesPendientes && data.peticionesPendientes.includes(input)) {
-          Alert.alert('¡Ya enviaste una solicitud!', 'La solicitud ya está pendiente.');
-          setLoading(false);
-          return;
-        }
+      // Verificación de amigos y solicitudes previas
+      if (data.amigos?.includes(input) || data.peticionesPendientes?.includes(input)) {
+        Alert.alert('Ya enviaste una solicitud o son amigos');
+        setLoading(false);
+        return;
+      }
 
-        // Verificar si el input es un correo electrónico
-        if (input.includes('@')) {
-          // Buscar por correo electrónico
-          const q = query(collection(db, 'users'), where('email', '==', input)); 
-          const querySnapshot = await getDocs(q);
+      if (input.includes('@')) {
+        const q = query(collection(db, 'users'), where('email', '==', input));
+        const querySnapshot = await getDocs(q);
 
-          if (!querySnapshot.empty) {
-            querySnapshot.forEach((userDoc) => {
-                const otroUsuarioId = userDoc.id;
-                const otroUsuarioRef = doc(db, 'users', otroUsuarioId);
-              
-                // Enviar la solicitud de amistad
-                updateDoc(userRef, {
-                  peticionesPendientes: arrayUnion(otroUsuarioId),
-                });
-                updateDoc(otroUsuarioRef, {
-                  peticionesPendientes: arrayUnion(userId),
-                });
-              });
-              
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          const otroUsuarioId = userDoc.id;
+          const otroUsuarioRef = doc(db, 'users', otroUsuarioId);
 
-            Alert.alert('Solicitud enviada', `Has enviado una solicitud a ${input}.`);
-          } else {
-            Alert.alert('Usuario no encontrado', 'No se ha encontrado un usuario con ese correo electrónico.');
-          }
-        } else {
-          // Si es un nombre de usuario
-          const otroUsuarioRef = doc(db, 'users', input);
-          const otroUsuarioSnap = await getDoc(otroUsuarioRef);
-
-          if (!otroUsuarioSnap.exists()) {
-            Alert.alert('Usuario no encontrado', 'No se ha encontrado un usuario con ese nombre.');
-            setLoading(false);
-            return;
-          }
-
-          // Enviar la solicitud de amistad
-          await updateDoc(userRef, {
-            peticionesPendientes: arrayUnion(input),
-          });
+          // ✅ Solo añadir solicitud al receptor
           await updateDoc(otroUsuarioRef, {
             peticionesPendientes: arrayUnion(userId),
           });
 
-          Alert.alert('Solicitud enviada', `Has enviado una solicitud a ${input}.`);
+          Alert.alert('Solicitud enviada', `Has enviado una solicitud a ${input}`);
+        } else {
+          Alert.alert('Usuario no encontrado', 'No se encontró un usuario con ese correo');
         }
-      }
+      } else {
+        const otroUsuarioRef = doc(db, 'users', input);
+        const otroUsuarioSnap = await getDoc(otroUsuarioRef);
 
-      setLoading(false);
+        if (!otroUsuarioSnap.exists()) {
+          Alert.alert('Usuario no encontrado', 'No se encontró un usuario con ese nombre');
+          setLoading(false);
+          return;
+        }
+
+        await updateDoc(otroUsuarioRef, {
+          peticionesPendientes: arrayUnion(userId),
+        });
+
+        Alert.alert('Solicitud enviada', `Has enviado una solicitud a ${input}`);
+      }
     } catch (error) {
       console.error('Error al enviar solicitud:', error);
-      Alert.alert('Error', 'Hubo un problema al enviar la solicitud.');
+      Alert.alert('Error', 'No se pudo enviar la solicitud');
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View>
-      <Text>Añadir un amigo</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Añadir un amigo</Text>
       <TextInput
-        placeholder="Ingresa el nombre de usuario o correo electrónico"
+        style={styles.input}
+        placeholder="Nombre de usuario o correo"
         value={input}
         onChangeText={setInput}
-        style={{ borderBottomWidth: 1, marginBottom: 20 }}
       />
-      <Button title={loading ? 'Enviando...' : 'Enviar solicitud'} onPress={enviarSolicitud} disabled={loading} />
+      {loading ? (
+        <ActivityIndicator size="small" />
+      ) : (
+        <Button title="Enviar solicitud" onPress={enviarSolicitud} />
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 24,
+    backgroundColor: '#f9f9f9',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingVertical: 8,
+    marginBottom: 20,
+    fontSize: 16,
+  },
+});
