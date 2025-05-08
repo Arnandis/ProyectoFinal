@@ -15,6 +15,7 @@ import { pedirPermisosNotificaciones } from './utils/notifications';
 import RetosScreen from './screens/RetosScreen';
 import AñadirAmigosScreen from './screens/AñadirAmigosScreen';
 import SolicitudesAmistadScreen from './screens/SolicitudesAmistadScreen';
+import CrearRetoScreen from './screens/CrearRetosScreen';
 
 const Stack = createStackNavigator();
 
@@ -52,6 +53,7 @@ export default function App() {
           <Stack.Screen name="Retos" component={RetosScreen} />
           <Stack.Screen name="AñadirAmigos" component={AñadirAmigosScreen} />
           <Stack.Screen name="Solicitudes" component={SolicitudesAmistadScreen} />
+          <Stack.Screen name="CrearReto" component={CrearRetoScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
