@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  Button,
   FlatList,
-  Alert,
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  StyleSheet,
+  Alert,
 } from 'react-native';
 import { getAuth } from 'firebase/auth';
-import { db } from '../firebase/firebaseConfig';
-import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import styles from '../styles/solicitudesStyles';
+import {
+  fetchSolicitudes,
+  aceptarSolicitudService,
+  rechazarSolicitudService,
+} from '../services/solicitudService';
 
 export default function SolicitudesAmistadScreen() {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -23,88 +25,32 @@ export default function SolicitudesAmistadScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    const fetchSolicitudes = async () => {
-      try {
-        const userRef = doc(db, 'users', userId);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          const idsSolicitantes = data.peticionesPendientes || [];
-
-          const detalles = await Promise.all(
-            idsSolicitantes.map(async (id) => {
-              const docRef = doc(db, 'users', id);
-              const docSnap = await getDoc(docRef);
-              if (docSnap.exists()) {
-                return { id, ...docSnap.data() };
-              }
-              return null;
-            })
-          );
-
-          setSolicitudes(detalles.filter(Boolean));
-        }
-      } catch (error) {
-        console.error('Error al cargar solicitudes:', error);
-      } finally {
-        setCargandoSolicitudes(false);
-      }
+    const cargar = async () => {
+      const data = await fetchSolicitudes(userId);
+      setSolicitudes(data);
+      setCargandoSolicitudes(false);
     };
-
-    fetchSolicitudes();
+    cargar();
   }, []);
 
   const aceptarSolicitud = async (otroUsuarioId) => {
-    const userSnap = await getDoc(doc(db, 'users', userId));
-    const data = userSnap.data();
-
-    if (!data.peticionesPendientes?.includes(otroUsuarioId)) {
-      Alert.alert('No puedes aceptar esta solicitud');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const otroUsuarioRef = doc(db, 'users', otroUsuarioId);
-
-      await updateDoc(otroUsuarioRef, {
-        peticionesPendientes: arrayRemove(userId),
-        amigos: arrayUnion(userId),
-      });
-
+    setLoading(true);
+    const success = await aceptarSolicitudService(userId, otroUsuarioId);
+    if (success) {
       setSolicitudes((prev) => prev.filter((u) => u.id !== otroUsuarioId));
       Alert.alert('Solicitud aceptada', 'Ahora son amigos');
-    } catch (error) {
-      console.error('Error al aceptar solicitud:', error);
-      Alert.alert('Error', 'No se pudo aceptar la solicitud');
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const rechazarSolicitud = async (otroUsuarioId) => {
-    try {
-      setLoading(true);
-      const userRef = doc(db, 'users', userId);
-      const otroUsuarioRef = doc(db, 'users', otroUsuarioId);
-
-      await updateDoc(userRef, {
-        peticionesPendientes: arrayRemove(otroUsuarioId),
-      });
-
-      await updateDoc(otroUsuarioRef, {
-        peticionesPendientes: arrayRemove(userId),
-      });
-
+    setLoading(true);
+    const success = await rechazarSolicitudService(userId, otroUsuarioId);
+    if (success) {
       setSolicitudes((prev) => prev.filter((u) => u.id !== otroUsuarioId));
       Alert.alert('Solicitud rechazada');
-    } catch (error) {
-      console.error('Error al rechazar solicitud:', error);
-      Alert.alert('Error', 'No se pudo rechazar la solicitud');
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   if (cargandoSolicitudes) {
@@ -174,103 +120,3 @@ export default function SolicitudesAmistadScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    backgroundColor: '#F9FAFB',
-    flex: 1,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 16,
-    color: '#1F2937',
-  },
-  noRequests: {
-    fontSize: 16,
-    color: '#6B7280',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  placeholderAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E5E7EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  avatarInitial: {
-    fontSize: 18,
-    color: '#374151',
-    fontWeight: 'bold',
-  },
-  userTextContainer: {
-    flex: 1,
-  },
-  username: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  email: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    marginTop: 12,
-    justifyContent: 'space-between',
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  acceptButton: {
-    backgroundColor: '#10B981',
-  },
-  rejectButton: {
-    backgroundColor: '#EF4444',
-  },
-  viewProfileButton: {
-    backgroundColor: '#3B82F6',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  centeredContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#6B7280',
-  },
-});
