@@ -1,13 +1,68 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  ActivityIndicator,
+  FlatList,
+  TouchableOpacity,
+} from 'react-native';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc, updateDoc, arrayUnion, query, where, getDocs, collection } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  query,
+  where,
+  getDocs,
+  collection,
+  startAt,
+  endAt,
+  orderBy,
+} from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 
 export default function AñadirAmigosScreen() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resultados, setResultados] = useState([]);
   const userId = getAuth().currentUser?.uid;
+
+  useEffect(() => {
+    const buscarUsuarios = async () => {
+      if (input.length < 2) {
+        setResultados([]);
+        return;
+      }
+
+      const q = query(
+        collection(db, 'users'),
+        orderBy('email'),
+        startAt(input),
+        endAt(input + '\uf8ff')
+      );
+
+      try {
+        const snapshot = await getDocs(q);
+        const results = snapshot.docs
+          .filter(doc => doc.id !== userId)
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+        setResultados(results);
+      } catch (err) {
+        console.error('Error en búsqueda:', err);
+        setResultados([]);
+      }
+    };
+
+    buscarUsuarios();
+  }, [input]);
 
   const enviarSolicitud = async () => {
     if (!input) {
@@ -27,7 +82,6 @@ export default function AñadirAmigosScreen() {
 
       const data = userSnap.data();
 
-      // Verificación de amigos y solicitudes previas
       if (data.amigos?.includes(input) || data.peticionesPendientes?.includes(input)) {
         Alert.alert('Ya enviaste una solicitud o son amigos');
         setLoading(false);
@@ -43,7 +97,6 @@ export default function AñadirAmigosScreen() {
           const otroUsuarioId = userDoc.id;
           const otroUsuarioRef = doc(db, 'users', otroUsuarioId);
 
-          // ✅ Solo añadir solicitud al receptor
           await updateDoc(otroUsuarioRef, {
             peticionesPendientes: arrayUnion(userId),
           });
@@ -76,14 +129,29 @@ export default function AñadirAmigosScreen() {
     }
   };
 
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.resultItem}
+      onPress={() => setInput(item.email)}
+    >
+      <Text style={styles.resultText}>{item.email}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Añadir un amigo</Text>
       <TextInput
         style={styles.input}
-        placeholder="Nombre de usuario o correo"
+        placeholder="Buscar por email..."
         value={input}
         onChangeText={setInput}
+      />
+      <FlatList
+        data={resultados}
+        keyExtractor={item => item.id}
+        renderItem={renderItem}
+        style={styles.list}
       />
       {loading ? (
         <ActivityIndicator size="small" />
@@ -99,7 +167,6 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: '#f9f9f9',
     flex: 1,
-    justifyContent: 'center',
   },
   title: {
     fontSize: 22,
@@ -111,7 +178,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     paddingVertical: 8,
-    marginBottom: 20,
+    marginBottom: 12,
+    fontSize: 16,
+  },
+  list: {
+    maxHeight: 180,
+    marginBottom: 16,
+  },
+  resultItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  resultText: {
     fontSize: 16,
   },
 });
