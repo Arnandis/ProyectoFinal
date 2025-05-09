@@ -4,7 +4,7 @@ import { PieChart } from 'react-native-chart-kit';
 import { tiempoStyles } from '../../styles/tiempoStyles';
 import TimeInput from '../../components/TimeInput';
 import { Dimensions } from 'react-native';
-import { saveGraficoTiempo, getGraficoTiempo, updateGraficoTiempo, deleteGraficoTiempo } from '../../services/tiempoService';
+import { saveGraficoTiempo } from '../../services/tiempoService';
 import { getAuth } from 'firebase/auth';
 
 const { width } = Dimensions.get('window');
@@ -76,47 +76,6 @@ export default function Tiempo() {
     setFecha('');
   };
 
-  const handleLeer = async () => {
-    try {
-      const data = await getGraficoTiempo(userId,fecha);
-      if (data) {
-        setTimeData(data);
-        Alert.alert('Éxito', 'Gráfico cargado correctamente.');
-      } else {
-        Alert.alert('Info', 'No se encontró un gráfico para esa fecha.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Error al obtener el gráfico.');
-    }
-  };
-
-  const handleActualizar = async () => {
-    try {
-      await updateGraficoTiempo(userId, fecha, timeData);
-      Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
-    } catch (error) {
-      Alert.alert('Error', 'Error al actualizar el gráfico.');
-    }
-  };
-
-  const handleEliminar = async () => {
-    try {
-      await deleteGraficoTiempo(userId, fecha);
-      Alert.alert('Éxito', 'Gráfico eliminado correctamente.');
-      setTimeData({
-        trabajo: 0,
-        estudio: 0,
-        descanso: 0,
-        deporte: 0,
-        familia: 0,
-        otros: 0,
-      });
-      setFecha('');
-    } catch (error) {
-      Alert.alert('Error', 'Error al eliminar el gráfico.');
-    }
-  };
-
   return (
     <View style={tiempoStyles.container}>
       <Text style={tiempoStyles.title}>Distribución del tiempo</Text>
@@ -157,18 +116,6 @@ export default function Tiempo() {
 
       <TouchableOpacity style={tiempoStyles.button} onPress={handleSave}>
         <Text style={tiempoStyles.buttonText}>Guardar gráfico</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={tiempoStyles.button} onPress={handleLeer}>
-        <Text style={tiempoStyles.buttonText}>Leer gráfico</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={tiempoStyles.button} onPress={handleActualizar}>
-        <Text style={tiempoStyles.buttonText}>Actualizar gráfico</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={tiempoStyles.button} onPress={handleEliminar}>
-        <Text style={tiempoStyles.buttonText}>Eliminar gráfico</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={tiempoStyles.button} onPress={handleReset}>

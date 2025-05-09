@@ -12,10 +12,11 @@ import {
   StyleSheet
 } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
-import { getAllGraficosTiempo } from '../../services/tiempoService';
+import { getAllGraficosTiempo,updateGraficoTiempo, deleteGraficoTiempo } from '../../services/tiempoService';
 import { getAuth } from 'firebase/auth';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import { TextInput } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 
@@ -27,6 +28,8 @@ export default function DetalleGraficoTiempo({ route }) {
   const [graficosDisponibles, setGraficosDisponibles] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const userId = getAuth().currentUser?.uid;
+  const [modalEdicionVisible, setModalEdicionVisible] = useState(false);
+  const [tiemposEditados, setTiemposEditados] = useState({ ...grafico.tiempos });
 
   const chartRef = useRef();
 
@@ -40,6 +43,25 @@ export default function DetalleGraficoTiempo({ route }) {
     const otros = data.filter(g => g.fecha !== grafico.fecha);
     setGraficosDisponibles(otros);
   };
+
+  const handleActualizar = async () => {
+    try {
+      await updateGraficoTiempo(userId, grafico.fecha, grafico.tiempos);
+      Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
+    } catch (error) {
+      Alert.alert('Error', 'Error al actualizar el gráfico.');
+    }
+  };
+
+  const handleEliminar = async () => {
+    try {
+      await deleteGraficoTiempo(userId, grafico.fecha);
+      Alert.alert('Éxito', 'Gráfico eliminado correctamente.');
+    } catch (error) {
+      Alert.alert('Error', 'Error al eliminar el gráfico.');
+    }
+  };
+
 
   const sanitize = (val) => isNaN(Number(val)) ? 0 : Number(val);
 
@@ -150,6 +172,59 @@ export default function DetalleGraficoTiempo({ route }) {
         />
       </View>
 
+      <View style={{ marginTop: 20 }}>
+        <Button title="Editar gráfico" onPress={() => setModalEdicionVisible(true)} color="#4CAF50" />
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalEdicionVisible}
+            onRequestClose={() => setModalEdicionVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Editar tiempos</Text>
+                {Object.keys(tiemposEditados).map((key) => (
+                  <View key={key} style={{ marginVertical: 6 }}>
+                    <Text style={{ fontWeight: 'bold' }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                    <TextInput
+                      style={styles.input}
+                      keyboardType="numeric"
+                      value={String(tiemposEditados[key])}
+                      onChangeText={(val) =>
+                        setTiemposEditados((prev) => ({
+                          ...prev,
+                          [key]: val,
+                        }))
+                      }
+                    />
+                  </View>
+                ))}
+
+                <Button
+                  title="Guardar cambios"
+                  onPress={async () => {
+                    try {
+                      await updateGraficoTiempo(userId, grafico.fecha, tiemposEditados);
+                      Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
+                      grafico.tiempos = tiemposEditados;
+                      setModalEdicionVisible(false);
+                    } catch (error) {
+                      Alert.alert('Error', 'No se pudo actualizar el gráfico.');
+                    }
+                  }}
+                  color="#2196F3"
+                />
+
+                <View style={{ height: 10 }} />
+                <Button title="Cancelar" onPress={() => setModalEdicionVisible(false)} color="#999" />
+              </View>
+            </View>
+          </Modal>
+
+        <View style={{ height: 10 }} />
+        <Button title="Eliminar gráfico" onPress={handleEliminar} color="#F44336" />
+      </View>
+
       <Button title="Compartir gráfico" onPress={handleCompartirGrafico} />
 
       <Button title="Comparar con otro gráfico" onPress={handleSeleccionarComparar} style={{ marginTop: 12 }} />
@@ -243,4 +318,5 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     borderBottomWidth: 1,
   },
+  
 });

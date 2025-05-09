@@ -118,3 +118,36 @@ export const getGraficosFinanzasPorFechas = async (userId, fechaInicio, fechaFin
     throw error;
   }
 };
+
+// Obtener gráfico del mes actual y del mes anterior
+export const getComparacionMesActualYAnterior = async (userId, fechaActual) => {
+  try {
+    const fechaActualObj = new Date(fechaActual);
+    const mesAnterior = new Date(fechaActualObj);
+    mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+
+    // Formatear ambas fechas en formato YYYY-MM (para comparar por mes)
+    const formatoFecha = (fecha) => {
+      const y = fecha.getFullYear();
+      const m = (fecha.getMonth() + 1).toString().padStart(2, '0');
+      return `${y}-${m}`;
+    };
+
+    const mesActualStr = formatoFecha(fechaActualObj);
+    const mesAnteriorStr = formatoFecha(mesAnterior);
+
+    const graficos = await getAllGraficos(userId);
+
+    // Filtrar gráficos por mes actual y anterior
+    const graficoActual = graficos.find(g => g.fecha.startsWith(mesActualStr));
+    const graficoAnterior = graficos.find(g => g.fecha.startsWith(mesAnteriorStr));
+
+    return {
+      actual: graficoActual ? graficoActual.gastos : null,
+      anterior: graficoAnterior ? graficoAnterior.gastos : null
+    };
+  } catch (error) {
+    console.error('Error al obtener gráficos para comparación:', error);
+    throw error;
+  }
+};
