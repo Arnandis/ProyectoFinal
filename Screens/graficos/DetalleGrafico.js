@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Button, Alert, Dimensions, Modal, Pressable, FlatList, StyleSheet } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { getAllGraficos } from '../../services/financeService';  
+import { deleteGrafico, getAllGraficos, updateGrafico } from '../../services/financeService';  
 import { getAuth } from 'firebase/auth';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import { TextInput } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 
@@ -16,6 +17,8 @@ export default function DetalleGraficoFinanzas({ route }) {
   const [graficosDisponibles, setGraficosDisponibles] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const userId = getAuth().currentUser?.uid;
+const [modalEdicionVisible, setModalEdicionVisible] = useState(false);
+const [gastosEditados, setGastosEditados] = useState({ ...grafico.gastos });
 
   const chartRef = useRef();
 
@@ -95,6 +98,30 @@ export default function DetalleGraficoFinanzas({ route }) {
     return comparaciones;
   };
 
+  const handleEliminarGrafico = () => {
+    Alert.alert(
+      'Eliminar gráfico',
+      '¿Estás seguro de que deseas eliminar este gráfico?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteGrafico(userId, grafico.fecha);
+              Alert.alert('Gráfico eliminado correctamente');
+              // Podrías navegar atrás si quieres: navigation.goBack();
+            } catch (error) {
+              console.error('Error al eliminar:', error);
+              Alert.alert('Error al eliminar el gráfico');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleCompartirGrafico = async () => {
     try {
       const uri = await captureRef(chartRef, {
@@ -112,7 +139,7 @@ export default function DetalleGraficoFinanzas({ route }) {
   };
 
   return (
-    <ScrollView style={{ padding: 16 }}>
+    <ScrollView style={styles.container}>
       <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
         Detalle del gráfico (Finanzas) - {grafico.fecha}
       </Text>
@@ -134,9 +161,64 @@ export default function DetalleGraficoFinanzas({ route }) {
         />
       </View>
 
-      <Button title="Compartir gráfico" onPress={handleCompartirGrafico} />
+      <Pressable style={styles.button} onPress={handleCompartirGrafico}>
+        <Text style={styles.buttonText}>Compartir gráfico</Text>
+      </Pressable>
+      <Pressable style={styles.button} onPress={handleSeleccionarComparar}>
+        <Text style={styles.buttonText}>Comparar con otro gráfico</Text>
+      </Pressable>
+<Pressable style={styles.button} onPress={() => setModalEdicionVisible(true)}>
+  <Text style={styles.buttonText}>Editar gráfico</Text>
+</Pressable>
+<Modal
+  animationType="slide"
+  transparent={true}
+  visible={modalEdicionVisible}
+  onRequestClose={() => setModalEdicionVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>Editar gastos</Text>
+      {Object.keys(gastosEditados).map((key) => (
+        <View key={key} style={{ marginVertical: 4 }}>
+          <Text>{key}</Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            value={String(gastosEditados[key])}
+            onChangeText={(val) =>
+              setGastosEditados((prev) => ({
+                ...prev,
+                [key]: val,
+              }))
+            }
+          />
+        </View>
+      ))}
+      <Button
+        title="Guardar cambios"
+        onPress={async () => {
+          const nuevoGrafico = { ...grafico, gastos: gastosEditados };
+          try {
+            await updateGrafico(userId, grafico.fecha, nuevoGrafico);
+            Alert.alert("Gráfico actualizado correctamente");
+            setModalEdicionVisible(false);
+            // Actualiza el estado para reflejar los nuevos datos en pantalla
+            Object.assign(grafico.gastos, gastosEditados);
+          } catch (error) {
+            console.error("Error al actualizar:", error);
+            Alert.alert("Error al actualizar el gráfico");
+          }
+        }}
+      />
+      <Button title="Cancelar" onPress={() => setModalEdicionVisible(false)} />
+    </View>
+  </View>
+</Modal>
 
-      <Button title="Comparar con otro gráfico" onPress={handleSeleccionarComparar} style={{ marginTop: 12 }} />
+<Pressable style={[styles.button, { backgroundColor: '#ff4d4d' }]} onPress={handleEliminarGrafico}>
+  <Text style={styles.buttonText}>Eliminar gráfico</Text>
+</Pressable>
 
       {/* MODAL DE SELECCIÓN */}
       <Modal
@@ -207,6 +289,51 @@ export default function DetalleGraficoFinanzas({ route }) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    backgroundColor: '#f5f7fa',
+    flex: 1,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
+  },
+  chartContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 12,
+    elevation: 3, // para Android
+    shadowColor: '#000', // para iOS
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    marginBottom: 20,
+  },
+  button: {
+    marginVertical: 10,
+    backgroundColor: '#4a90e2',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  comparisonTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 16,
+    color: '#333',
+  },
+  comparisonText: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 6,
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',

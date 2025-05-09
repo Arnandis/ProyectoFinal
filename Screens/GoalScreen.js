@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import UUID from 'react-native-uuid';
 import { getAuth } from 'firebase/auth';
 import { saveGoal, getGoals, deleteGoal, updateGoalProgress } from '../services/goalService';
-import { enviarNotificacionInmediata,enviarNotificacionProgramada } from '../utils/notifications';
+import { enviarNotificacionInmediata, enviarNotificacionProgramada } from '../utils/notifications';
 import { useNavigation } from '@react-navigation/native';
 
 export default function GoalScreen() {
@@ -46,7 +46,7 @@ export default function GoalScreen() {
         startDate,
         endDate,
       };
-  
+
       try {
         await saveGoal(userId, newGoal);
         setGoals(prev => [...prev, newGoal]);
@@ -55,19 +55,18 @@ export default function GoalScreen() {
         setGoalProgress('');
         setStartDate('');
         setEndDate('');
-  
+
         // 🟢 Notificación inmediata al crear la meta
         await enviarNotificacionInmediata(
           '¡Meta creada!',
           `Has creado la meta "${newGoal.name}". ¡Mucho ánimo! 💪`
         );
-  
+
         // 🟡 Notificación programada un día antes de la fecha de fin
         const fechaFin = new Date(endDate);
         const fechaRecordatorio = new Date(fechaFin);
         fechaRecordatorio.setDate(fechaFin.getDate() - 1);
 
-        // Verifica que la diferencia entre HOY y la fechaRecordatorio sea exactamente 1 día
         const hoy = new Date();
         const diferenciaDias = Math.ceil((fechaRecordatorio - hoy) / (1000 * 60 * 60 * 24));
 
@@ -79,7 +78,6 @@ export default function GoalScreen() {
           );
         }
 
-  
       } catch (error) {
         console.error('Error al guardar la meta:', error);
       }
@@ -87,7 +85,7 @@ export default function GoalScreen() {
       Alert.alert('Completa todos los campos', 'Por favor, rellena todos los campos para añadir la meta.');
     }
   };
-  
+
   const updateProgress = async (id, progress) => {
     const updatedGoals = goals.map((goal) =>
       goal.id === id ? { ...goal, progress } : goal
@@ -149,17 +147,11 @@ export default function GoalScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Mis Logros y Objetivos</Text>
       <TouchableOpacity 
-  onPress={() => navigation.navigate('Retos')}
-  style={{
-    backgroundColor: '#FFD700',
-    padding: 12,
-    borderRadius: 10,
-    marginVertical: 10,
-    alignItems: 'center',
-  }}
->
-  <Text style={{ color: '#000', fontWeight: 'bold' }}>Ir a Retos</Text>
-</TouchableOpacity>
+        onPress={() => navigation.navigate('Retos')}
+        style={styles.retosBtn}
+      >
+        <Text style={styles.retosBtnText}>Ir a Retos</Text>
+      </TouchableOpacity>
 
       <TextInput
         style={styles.input}
@@ -250,11 +242,10 @@ export default function GoalScreen() {
           ))}
         </View>
       ) : (
-        <Text style={{ textAlign: 'center', marginTop: 20 }}>
+        <Text style={styles.noGoalsText}>
           No hay metas para este filtro.
         </Text>
       )}
     </ScrollView>
   );
 }
-

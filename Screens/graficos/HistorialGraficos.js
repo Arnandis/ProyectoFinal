@@ -68,83 +68,124 @@ export default function HistorialGraficos({ navigation }) {
           navigation.navigate('DetalleGraficoTiempo', { grafico: item });
         }
       }}
-      style={{ padding: 16, borderBottomWidth: 1, borderColor: '#ccc' }}
+      style={{
+        padding: 20,
+        marginBottom: 12,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 5
+      }}
     >
-      <Text style={{ fontWeight: 'bold' }}>{item.fecha}</Text>
+      <Text style={{ fontWeight: '600', fontSize: 16, marginBottom: 4 }}>{item.fecha}</Text>
       {tipoGrafico === 'finanzas' ? (
         <>
-          <Text>Ingresos: {item.ingresos}</Text>
-          <Text>Gastos: {JSON.stringify(item.gastos)}</Text>
+          <Text style={{ color: '#666' }}>Ingresos: {item.ingresos}</Text>
+          <Text style={{ color: '#666' }}>Gastos: {JSON.stringify(item.gastos)}</Text>
         </>
       ) : (
         <>
-          <Text>Trabajo: {item.tiempos?.trabajo ?? 0} min</Text>
-          <Text>Estudio: {item.tiempos?.estudio ?? 0} min</Text>
-          <Text>Descanso: {item.tiempos?.descanso ?? 0} min</Text>
-          <Text>Deporte: {item.tiempos?.deporte ?? 0} min</Text>
-          <Text>Familia: {item.tiempos?.familia ?? 0} min</Text>
-          <Text>Otros: {item.tiempos?.otros ?? 0} min</Text>
+          <Text style={{ color: '#666' }}>Trabajo: {item.tiempos?.trabajo ?? 0} min</Text>
+          <Text style={{ color: '#666' }}>Estudio: {item.tiempos?.estudio ?? 0} min</Text>
+          <Text style={{ color: '#666' }}>Descanso: {item.tiempos?.descanso ?? 0} min</Text>
+          <Text style={{ color: '#666' }}>Deporte: {item.tiempos?.deporte ?? 0} min</Text>
+          <Text style={{ color: '#666' }}>Familia: {item.tiempos?.familia ?? 0} min</Text>
+          <Text style={{ color: '#666' }}>Otros: {item.tiempos?.otros ?? 0} min</Text>
         </>
       )}
     </TouchableOpacity>
   );
-  
+
   return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>Historial de Gráficos</Text>
+    <View style={{ flex: 1, padding: 16, backgroundColor: '#f7f7f7' }}>
+      <Text style={{ fontSize: 24, fontWeight: '600', marginBottom: 16, color: '#333' }}>Historial de Gráficos</Text>
 
       <View style={{ flexDirection: 'row', marginBottom: 16 }}>
         <TouchableOpacity
           onPress={() => setTipoGrafico('finanzas')}
           style={{
-            padding: 10,
-            backgroundColor: tipoGrafico === 'finanzas' ? '#007BFF' : '#ccc',
-            marginRight: 8,
-            borderRadius: 8
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            backgroundColor: tipoGrafico === 'finanzas' ? '#007BFF' : '#e0e0e0',
+            borderRadius: 50,
+            marginRight: 8
           }}
         >
-          <Text style={{ color: '#fff' }}>Finanzas</Text>
+          <Text style={{ color: tipoGrafico === 'finanzas' ? '#fff' : '#333', fontWeight: '500' }}>Finanzas</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setTipoGrafico('tiempo')}
           style={{
-            padding: 10,
-            backgroundColor: tipoGrafico === 'tiempo' ? '#007BFF' : '#ccc',
-            borderRadius: 8
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            backgroundColor: tipoGrafico === 'tiempo' ? '#007BFF' : '#e0e0e0',
+            borderRadius: 50
           }}
         >
-          <Text style={{ color: '#fff' }}>Tiempo</Text>
+          <Text style={{ color: tipoGrafico === 'tiempo' ? '#fff' : '#333', fontWeight: '500' }}>Tiempo</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={{ marginBottom: 16 }}>
-        <Text>Fecha inicio (YYYY-MM-DD):</Text>
+      <View style={{ marginBottom: 24 }}>
+        <Text style={{ marginBottom: 8, fontSize: 14, color: '#555' }}>Fecha inicio (YYYY-MM-DD):</Text>
         <TextInput
           value={fechaInicio}
           onChangeText={setFechaInicio}
           placeholder="2024-01-01"
-          style={{ borderWidth: 1, padding: 8, marginBottom: 8, borderRadius: 6 }}
+          style={{
+            borderWidth: 1,
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            borderColor: '#ddd',
+            backgroundColor: '#fff',
+            marginBottom: 16
+          }}
         />
-        <Text>Fecha fin (YYYY-MM-DD):</Text>
+        <Text style={{ marginBottom: 8, fontSize: 14, color: '#555' }}>Fecha fin (YYYY-MM-DD):</Text>
         <TextInput
           value={fechaFin}
           onChangeText={setFechaFin}
           placeholder="2024-12-31"
-          style={{ borderWidth: 1, padding: 8, marginBottom: 8, borderRadius: 6 }}
+          style={{
+            borderWidth: 1,
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            borderColor: '#ddd',
+            backgroundColor: '#fff',
+            marginBottom: 16
+          }}
         />
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <TouchableOpacity
             onPress={filtrarPorFechas}
-            style={{ backgroundColor: '#28a745', padding: 10, borderRadius: 8, flex: 1, marginRight: 8 }}
+            style={{
+              backgroundColor: '#28a745',
+              paddingVertical: 12,
+              paddingHorizontal: 20,
+              borderRadius: 50,
+              flex: 1,
+              marginRight: 8
+            }}
           >
-            <Text style={{ color: '#fff', textAlign: 'center' }}>Filtrar</Text>
+            <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '500' }}>Filtrar</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={limpiarFiltro}
-            style={{ backgroundColor: '#dc3545', padding: 10, borderRadius: 8, flex: 1 }}
+            style={{
+              backgroundColor: '#dc3545',
+              paddingVertical: 12,
+              paddingHorizontal: 20,
+              borderRadius: 50,
+              flex: 1
+            }}
           >
-            <Text style={{ color: '#fff', textAlign: 'center' }}>Limpiar Filtro</Text>
+            <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '500' }}>Limpiar Filtro</Text>
           </TouchableOpacity>
         </View>
       </View>
