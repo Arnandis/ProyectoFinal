@@ -119,28 +119,30 @@ export const getGraficosFinanzasPorFechas = async (userId, fechaInicio, fechaFin
   }
 };
 
-// Obtener gráfico del mes actual y del mes anterior
+//REPASAR PQ CREC QUE NO ES NECESARI
+// Obtener gráfico del mes actual y del mes anterior 
 export const getComparacionMesActualYAnterior = async (userId, fechaActual) => {
   try {
     const fechaActualObj = new Date(fechaActual);
     const mesAnterior = new Date(fechaActualObj);
     mesAnterior.setMonth(mesAnterior.getMonth() - 1);
 
-    // Formatear ambas fechas en formato YYYY-MM (para comparar por mes)
-    const formatoFecha = (fecha) => {
-      const y = fecha.getFullYear();
-      const m = (fecha.getMonth() + 1).toString().padStart(2, '0');
-      return `${y}-${m}`;
-    };
+    const formatoMes = (fecha) => fecha.toISOString().slice(0, 7); // YYYY-MM
 
-    const mesActualStr = formatoFecha(fechaActualObj);
-    const mesAnteriorStr = formatoFecha(mesAnterior);
+    const mesActualStr = formatoMes(fechaActualObj);
+    const mesAnteriorStr = formatoMes(mesAnterior);
 
     const graficos = await getAllGraficos(userId);
 
-    // Filtrar gráficos por mes actual y anterior
-    const graficoActual = graficos.find(g => g.fecha.startsWith(mesActualStr));
-    const graficoAnterior = graficos.find(g => g.fecha.startsWith(mesAnteriorStr));
+    const getUltimoGraficoDeMes = (mesStr) => {
+      const filtrados = graficos
+        .filter(g => g.fecha?.startsWith(mesStr))
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); // más reciente primero
+      return filtrados[0] || null;
+    };
+
+    const graficoActual = getUltimoGraficoDeMes(mesActualStr);
+    const graficoAnterior = getUltimoGraficoDeMes(mesAnteriorStr);
 
     return {
       actual: graficoActual ? graficoActual.gastos : null,
@@ -151,3 +153,41 @@ export const getComparacionMesActualYAnterior = async (userId, fechaActual) => {
     throw error;
   }
 };
+
+export async function getGastosTotalesPorMes(userId, year) {
+  const gastosMensuales = Array(12).fill(0);
+
+  const ref = collection(db, 'usuarios', userId, 'graficos_finanzas');
+  const snapshot = await getDocs(ref);
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const fecha = new Date(data.fecha);
+    if (fecha.getFullYear() === year) {
+      const mes = fecha.getMonth(); // 0 = Enero, 11 = Diciembre
+      const totalGastos = Object.values(data.gastos || {}).reduce((a, b) => a + b, 0);
+      gastosMensuales[mes] += totalGastos;
+    }
+  });
+
+  return gastosMensuales;
+}
+
+export const getIngresosTotalesPorMes = async (userId, year) => {
+  const ingresosMensuales = Array(12).fill(0);
+
+  const ref = collection(db, 'usuarios', userId, 'graficos_finanzas');
+  const snapshot = await getDocs(ref);
+
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    const fecha = new Date(data.fecha);
+    if (fecha.getFullYear() === year) {
+      const mes = fecha.getMonth(); // 0 = enero, 11 = diciembre
+      ingresosMensuales[mes] += parseFloat(data.ingresos) || 0;
+    }
+  });
+
+  return ingresosMensuales;
+};
+
