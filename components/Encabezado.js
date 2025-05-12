@@ -55,6 +55,14 @@ const Encabezado = ({ title }) => {
           title="Solicitudes Amistad"
           leadingIcon="account-plus"
         />
+        <Menu.Item
+          onPress={() => {
+            closeMenu();
+            navigation.navigate('RetosRecibidos');  // Navegación a la pantalla de Añadir Amigos
+          }}
+          title="Retos Recibidos"
+          leadingIcon="account-plus"
+        />
       </Menu>
 
       <Text style={styles.title}>{title}</Text>

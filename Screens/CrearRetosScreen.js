@@ -19,8 +19,10 @@ const CrearRetoScreen = () => {
   const { params } = useRoute();
   const amigoId = params?.amigoId;
   const [titulo, setTitulo] = useState("");
+  const [detalle, setDetalle] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+  const [estrellas, setEstrellas] = useState("5");
   const [imagenUri, setImagenUri] = useState(null);
   const navigation = useNavigation();
   const auth = getAuth();
@@ -37,9 +39,7 @@ const CrearRetoScreen = () => {
     }
   };
 
-  const esFechaValida = (fecha) => {
-    return /^\d{4}-\d{2}-\d{2}$/.test(fecha);
-  };
+  const esFechaValida = (fecha) => /^\d{4}-\d{2}-\d{2}$/.test(fecha);
 
   const enviarReto = async () => {
     if (!titulo.trim()) {
@@ -52,16 +52,37 @@ const CrearRetoScreen = () => {
       return;
     }
 
+    const hoy = new Date();
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+
+    if (inicio < hoy.setHours(0, 0, 0, 0)) {
+      Alert.alert("Fecha inválida", "La fecha de inicio no puede ser anterior a hoy.");
+      return;
+    }
+
+    if (fin < inicio) {
+      Alert.alert("Fecha inválida", "La fecha de fin no puede ser anterior a la de inicio.");
+      return;
+    }
+
+    const estrellasNum = parseInt(estrellas);
+    if (isNaN(estrellasNum) || estrellasNum < 1 || estrellasNum > 100) {
+      Alert.alert("Estrellas inválidas", "Elige entre 1 y 100 estrellas.");
+      return;
+    }
+
     try {
       await addDoc(collection(db, "retos"), {
         creadorId: userId,
         retadoId: amigoId,
         titulo,
+        detalle: detalle.trim() || null,
         fechaInicio,
         fechaFin,
         estado: "pendiente",
         imagen: imagenUri || null,
-        estrellas: 5,
+        estrellas: estrellasNum,
         creadoEn: serverTimestamp(),
       });
 
@@ -83,6 +104,24 @@ const CrearRetoScreen = () => {
         placeholder="Ej. Correr 20 km"
         value={titulo}
         onChangeText={setTitulo}
+      />
+
+      <Text style={styles.label}>Detalles del Reto (opcional)</Text>
+      <TextInput
+        style={[styles.input, { height: 80 }]}
+        placeholder="Describe más a fondo el reto..."
+        value={detalle}
+        onChangeText={setDetalle}
+        multiline
+      />
+
+      <Text style={styles.label}>Estrellas apostadas (1 - 100)</Text>
+      <TextInput
+        style={styles.input}
+        keyboardType="numeric"
+        value={estrellas}
+        onChangeText={setEstrellas}
+        placeholder="Ej. 5"
       />
 
       <Text style={styles.label}>Fecha de Inicio (YYYY-MM-DD)</Text>

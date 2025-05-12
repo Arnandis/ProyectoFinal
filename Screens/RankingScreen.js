@@ -1,5 +1,5 @@
 import React, { useEffect, useState,useRef, useCallback } from "react";
-import { View, Text, FlatList, Image, StyleSheet, Pressable } from "react-native";
+import { View, Text, FlatList, Image, StyleSheet, Pressable, TouchableOpacity } from "react-native";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -68,39 +68,46 @@ const getPositionChange = (user) => {
 };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🏅 Ranking de Amigos</Text>
+  <View style={styles.container}>
+    <Text style={styles.title}>🏅 Ranking de Amigos</Text>
 
-      <FlatList
-        data={ranking}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <View
-            style={[
-              styles.card,
-              item.id === currentUserId && { backgroundColor: "#E0F2FE" } // azul claro para el actual
-            ]}
-          >
-            <Text style={styles.position}>{index + 1}</Text>
-            <Image source={{ uri: item.photo }} style={styles.avatar} />
-            <View style={styles.info}>
-              <Pressable onPress={() => navigation.navigate("PerfilAmigo", { id: item.id })}>
-                <Text style={styles.name}>{item.name}</Text>
-              </Pressable>
-              <Text style={styles.stars}>⭐ {item.estrellas}</Text>
-            </View>
-            <View style={styles.arrow}>{getPositionChange(item)}</View>
-            <Pressable
-              style={styles.retarButton}
-              onPress={() => navigation.navigate("CrearReto", { amigoId: item.id })}
-            >
-              <Text style={styles.retarText}>Retar</Text>
+    <TouchableOpacity
+      style={styles.verRetosButton}
+      onPress={() => navigation.navigate("RetosActivos")}
+    >
+      <Text style={styles.verRetosText}>Ver retos activos</Text>
+    </TouchableOpacity>
+
+    <FlatList
+      data={ranking}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item, index }) => (
+        <View
+          style={[
+            styles.card,
+            item.id === currentUserId && { backgroundColor: "#E0F2FE" }
+          ]}
+        >
+          <Text style={styles.position}>{index + 1}</Text>
+          <Image source={{ uri: item.photo }} style={styles.avatar} />
+          <View style={styles.info}>
+            <Pressable onPress={() => navigation.navigate("PerfilAmigo", { id: item.id })}>
+              <Text style={styles.name}>{item.name}</Text>
             </Pressable>
+            <Text style={styles.stars}>⭐ {item.estrellas}</Text>
           </View>
-        )}
-      />
-    </View>
-  );
+          <View style={styles.arrow}>{getPositionChange(item)}</View>
+          <Pressable
+            style={styles.retarButton}
+            onPress={() => navigation.navigate("CrearReto", { amigoId: item.id })}
+          >
+            <Text style={styles.retarText}>Retar</Text>
+          </Pressable>
+        </View>
+      )}
+    />
+  </View>
+);
 };
 
 const styles = StyleSheet.create({
@@ -167,6 +174,20 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
+  verRetosButton: {
+  backgroundColor: "#2563EB", // azul
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  borderRadius: 10,
+  alignSelf: "center",
+  marginBottom: 10,
+},
+
+verRetosText: {
+  color: "white",
+  fontWeight: "bold",
+  fontSize: 16,
+},
 });
 
 export default RankingScreen;
