@@ -77,17 +77,21 @@ const ProfileScreen = () => {
   };
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+  let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.5,
+    base64: true,
+  });
 
-    if (!result.canceled) {
-      handleChange('photo', result.assets[0].uri);
-    }
-  };
+  if (!result.canceled && result.assets?.length > 0) {
+    const base64 = result.assets[0].base64;
+    const uriBase64 = `data:image/jpeg;base64,${base64}`;
+    handleChange('photo', uriBase64);
+  }
+};
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

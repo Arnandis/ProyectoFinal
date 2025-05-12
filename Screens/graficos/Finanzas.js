@@ -6,12 +6,18 @@ import { getComparacionMesActualYAnterior, getGastosTotalesPorMes, getIngresosTo
 import { finanzasStyles } from '../../styles/finanzasStyles';
 import GastoInput from '../../components/GastoInput';
 import { LineChart } from 'react-native-chart-kit';
+import { Modal } from 'react-native';
 
 export default function Finanzas() {
   const [ingresos, setIngresos] = useState('');
   const [fecha, setFecha] = useState('');
   const [gastosPorMes, setGastosPorMes] = useState(Array(12).fill(0));
   const [ingresosPorMes, setIngresosPorMes] = useState(Array(12).fill(0));
+  const [modalVisible, setModalVisible] = useState(false);
+  const [mesSeleccionado, setMesSeleccionado] = useState('');
+  const [gastosMesSeleccionado, setGastosMesSeleccionado] = useState(0);
+  const [ingresosMesSeleccionado, setIngresosMesSeleccionado] = useState(0);
+  const [tipoModal, setTipoModal] = useState(''); // "gasto" o "ingreso"
 
   const [gastos, setGastos] = useState({
     ocio: 0,
@@ -121,6 +127,7 @@ export default function Finanzas() {
 
       <Text style={finanzasStyles.subtitle}>Categorías de Gastos</Text>
 
+      <Text style={finanzasStyles.subtitle}>Ocio</Text>
       <GastoInput label="Ocio" value={gastos.ocio} onChange={(text) => handleGastosChange('ocio', text)} />
       <GastoInput label="Alquiler" value={gastos.alquiler} onChange={(text) => handleGastosChange('alquiler', text)} />
       <GastoInput label="Festivales" value={gastos.festivales} onChange={(text) => handleGastosChange('festivales', text)} />
@@ -164,7 +171,15 @@ export default function Finanzas() {
           }}
           bezier
           style={{ marginVertical: 10, borderRadius: 16 }}
+          onDataPointClick={({ index, value }) => {
+          const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+          setMesSeleccionado(meses[index]);
+          setGastosMesSeleccionado(value);
+          setTipoModal('gasto');
+          setModalVisible(true);
+          }}
         />
+
       )}
 
       <Text style={finanzasStyles.chartTitle}>Ingresos por Mes</Text>
@@ -189,8 +204,35 @@ export default function Finanzas() {
           }}
           bezier
           style={{ marginVertical: 10, borderRadius: 16 }}
+          onDataPointClick={({ index, value }) => {
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            setMesSeleccionado(meses[index]);
+            setIngresosMesSeleccionado(value);
+            setTipoModal('ingreso');
+            setModalVisible(true);
+          }}
+
         />
       )}
+
+    <Modal
+      visible={modalVisible}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setModalVisible(false)}
+    >
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10, width: '80%' }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>{mesSeleccionado}</Text>
+          {tipoModal === 'gasto' ? (
+            <Text>Total de Gastos: {gastosMesSeleccionado}€</Text>
+          ) : (
+            <Text>Total de Ingresos: {ingresosMesSeleccionado}€</Text>
+          )}
+          <Button title="Cerrar" onPress={() => setModalVisible(false)} />
+        </View>
+      </View>
+    </Modal>
 
     </ScrollView>
   );
