@@ -85,10 +85,42 @@ export default function Login({ navigation }) {
       setError(err.message);
     }
   };
+
+const [frase, setFrase] = useState('');
+const [autor, setAutor] = useState('');
+
+useEffect(() => {
+  const fetchFraseMotivacional = async () => {
+    try {
+      const response = await fetch('https://zenquotes.io/api/random');
+      const data = await response.json();
+      if (data && data[0]) {
+        setFrase(data[0].q);
+        setAutor(data[0].a);
+      }
+    } catch (error) {
+      console.error('Error al obtener la frase motivacional:', error);
+      setFrase('Confía en ti. Cada paso cuenta.');
+      setAutor('Motivación');
+    }
+  };
+
+  fetchFraseMotivacional();
+}, []);
+
+
   return (
     <View style={loginStyles.container}>
       <Text style={loginStyles.titulo}>¡Hola!</Text>
       <Text style={loginStyles.subTitle}>Inicia sesión con tu cuenta</Text>
+<View style={{ marginBottom: 20, alignItems: 'center', paddingHorizontal: 20 }}>
+  <Text style={{ fontSize: 16, fontStyle: 'italic', textAlign: 'center', color: '#555' }}>
+    "{frase}"
+  </Text>
+  <Text style={{ fontSize: 14, color: '#888', marginTop: 5 }}>
+    - {autor}
+  </Text>
+</View>
 
       <TextInput
         placeholder="tuemail@gmail.com"
