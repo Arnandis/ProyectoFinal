@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { getRetosActivosPorUsuario, getUserById } from '../services/retoService';
 import { getAuth } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
 
 const RetosActivosScreen = () => {
   const { currentUser } = getAuth();
   const [retos, setRetos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const cargarRetos = async () => {
@@ -36,7 +38,10 @@ const RetosActivosScreen = () => {
   }
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} onPress={() => {/* navegar al detalle */}}>
+<TouchableOpacity
+  style={styles.card}
+  onPress={() => navigation.navigate('DetalleReto', { retoId: item.id })}
+>
       <Text style={styles.title}>{item.titulo}</Text>
       <Text style={styles.detail}>{item.detalle}</Text>
       <Text style={styles.dates}>Del {item.fechaInicio} al {item.fechaFin}</Text>

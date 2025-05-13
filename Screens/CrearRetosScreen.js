@@ -24,6 +24,9 @@ const CrearRetoScreen = () => {
   const [fechaFin, setFechaFin] = useState("");
   const [estrellas, setEstrellas] = useState("5");
   const [imagenUri, setImagenUri] = useState(null);
+  const [objetivo, setObjetivo] = useState("");        // 👈 Nuevo
+  const [unidad, setUnidad] = useState("");            // 👈 Nuevo
+
   const navigation = useNavigation();
   const auth = getAuth();
   const userId = auth.currentUser.uid;
@@ -72,6 +75,17 @@ const CrearRetoScreen = () => {
       return;
     }
 
+    const objetivoNum = parseFloat(objetivo);
+    if (isNaN(objetivoNum) || objetivoNum <= 0) {
+      Alert.alert("Objetivo inválido", "Debes introducir un número válido como objetivo.");
+      return;
+    }
+
+    if (!unidad.trim()) {
+      Alert.alert("Unidad requerida", "Debes indicar una unidad (por ejemplo: km, páginas, horas).");
+      return;
+    }
+
     try {
       await addDoc(collection(db, "retos"), {
         creadorId: userId,
@@ -84,6 +98,18 @@ const CrearRetoScreen = () => {
         imagen: imagenUri || null,
         estrellas: estrellasNum,
         creadoEn: serverTimestamp(),
+        objetivo: objetivoNum,
+        unidad: unidad.trim(),
+        progreso: {
+          [userId]: {
+            porcentaje: 0,
+            fotos: [],
+          },
+          [amigoId]: {
+            porcentaje: 0,
+            fotos: [],
+          },
+        },
       });
 
       Alert.alert("Reto enviado", "El reto ha sido enviado correctamente.");
@@ -113,6 +139,23 @@ const CrearRetoScreen = () => {
         value={detalle}
         onChangeText={setDetalle}
         multiline
+      />
+
+      <Text style={styles.label}>Objetivo numérico</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Ej. 20"
+        keyboardType="numeric"
+        value={objetivo}
+        onChangeText={setObjetivo}
+      />
+
+      <Text style={styles.label}>Unidad del objetivo</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Ej. km, páginas, horas"
+        value={unidad}
+        onChangeText={setUnidad}
       />
 
       <Text style={styles.label}>Estrellas apostadas (1 - 100)</Text>

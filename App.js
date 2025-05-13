@@ -18,6 +18,7 @@ import SolicitudesAmistadScreen from './screens/SolicitudesAmistadScreen';
 import CrearRetoScreen from './screens/CrearRetosScreen';
 import RetosRecibidosScreen from './screens/RetosRecibidosScreen';
 import RetosActivosScreen from './screens/RetosActivosScreen';
+import DetalleRetoScreen from './screens/DetalleRetoScreen';
 
 const Stack = createStackNavigator();
 
@@ -58,6 +59,7 @@ export default function App() {
           <Stack.Screen name="CrearReto" component={CrearRetoScreen} />
           <Stack.Screen name="RetosRecibidos" component={RetosRecibidosScreen} />
           <Stack.Screen name="RetosActivos" component={RetosActivosScreen} />
+          <Stack.Screen name="DetalleReto" component={DetalleRetoScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

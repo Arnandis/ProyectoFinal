@@ -1,4 +1,4 @@
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 
 // Obtiene todos los retos aceptados donde el usuario participa
@@ -40,4 +40,19 @@ export const getUserById = async (uid) => {
     console.error("Error obteniendo usuario:", error);
     return null;
   }
+};
+
+export const sumarEstrellas = async (userId, cantidad) => {
+  const ref = doc(db, "users", userId);
+  const snap = await getDoc(ref);
+  const estrellasActuales = snap.exists() ? snap.data().estrellas || 0 : 0;
+  await updateDoc(ref, { estrellas: estrellasActuales + cantidad });
+};
+
+export const restarEstrellas = async (userId, cantidad) => {
+  const ref = doc(db, "users", userId);
+  const snap = await getDoc(ref);
+  const estrellasActuales = snap.exists() ? snap.data().estrellas || 0 : 0;
+  const nuevas = Math.max(0, estrellasActuales - cantidad);
+  await updateDoc(ref, { estrellas: nuevas });
 };
