@@ -71,6 +71,14 @@ const Encabezado = ({ title }) => {
           title="Articulos y Consejos"
           leadingIcon="account-plus"
         />
+        <Menu.Item
+          onPress={() => {
+            closeMenu();
+            navigation.navigate('Habitica');  // Navegación a la pantalla de Añadir Amigos
+          }}
+          title="Habitica"
+          leadingIcon="account-plus"
+        />
       </Menu>
 
       <Text style={styles.title}>{title}</Text>

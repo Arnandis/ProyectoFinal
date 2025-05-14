@@ -8,6 +8,9 @@ import { getAuth } from 'firebase/auth';
 import { saveGoal, getGoals, deleteGoal, updateGoalProgress } from '../services/goalService';
 import { enviarNotificacionInmediata, enviarNotificacionProgramada } from '../utils/notifications';
 import { useNavigation } from '@react-navigation/native';
+import { completarTareaHabitica, crearTareaHabitica } from '../services/habiticaService';
+import { db } from '../firebase/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function GoalScreen() {
   const [goals, setGoals] = useState([]);
@@ -36,73 +39,125 @@ export default function GoalScreen() {
     }
   };
 
-  const addGoal = async () => {
-    if (goalName && goalTarget && goalProgress && startDate && endDate) {
-      const newGoal = {
-        id: UUID.v4(),
-        name: goalName.trim().toLowerCase(),
-        target: parseFloat(goalTarget),
-        progress: parseFloat(goalProgress),
-        startDate,
-        endDate,
-      };
-
-      try {
-        await saveGoal(userId, newGoal);
-        setGoals(prev => [...prev, newGoal]);
-        setGoalName('');
-        setGoalTarget('');
-        setGoalProgress('');
-        setStartDate('');
-        setEndDate('');
-
-        // 🟢 Notificación inmediata al crear la meta
-        await enviarNotificacionInmediata(
-          '¡Meta creada!',
-          `Has creado la meta "${newGoal.name}". ¡Mucho ánimo! 💪`
-        );
-
-        // 🟡 Notificación programada un día antes de la fecha de fin
-        const fechaFin = new Date(endDate);
-        const fechaRecordatorio = new Date(fechaFin);
-        fechaRecordatorio.setDate(fechaFin.getDate() - 1);
-
-        const hoy = new Date();
-        const diferenciaDias = Math.ceil((fechaRecordatorio - hoy) / (1000 * 60 * 60 * 24));
-
-        if (diferenciaDias === 1) {
-          await enviarNotificacionProgramada(
-            '⏰ Recordatorio de meta',
-            `Mañana vence tu meta "${newGoal.name}". ¡A por ello!`,
-            { date: fechaRecordatorio }
-          );
-        }
-
-      } catch (error) {
-        console.error('Error al guardar la meta:', error);
-      }
-    } else {
-      Alert.alert('Completa todos los campos', 'Por favor, rellena todos los campos para añadir la meta.');
-    }
-  };
-
-  const updateProgress = async (id, progress) => {
-    const updatedGoals = goals.map((goal) =>
-      goal.id === id ? { ...goal, progress } : goal
-    );
-    setGoals(updatedGoals);
+ const addGoal = async () => {
+  if (goalName && goalTarget && goalProgress && startDate && endDate) {
+    const newGoal = {
+      id: UUID.v4(),
+      name: goalName.trim().toLowerCase(),
+      target: parseFloat(goalTarget),
+      progress: parseFloat(goalProgress),
+      startDate,
+      endDate,
+    };
 
     try {
-      await updateGoalProgress(userId, id, progress);
-    } catch (error) {
-      console.error('Error al actualizar progreso:', error);
-    }
+      // 1. Guardamos la meta en Firestore **sin el taskId** de Habitica
+      await saveGoal(userId, newGoal);
+      setGoals(prev => [...prev, newGoal]);
 
-    const goal = updatedGoals.find(g => g.id === id);
-    if (goal && goal.progress >= goal.target) {
-      Alert.alert('¡Felicidades!', 'Has cumplido tu objetivo');
+      // Limpiar los campos del formulario
+      setGoalName('');
+      setGoalTarget('');
+      setGoalProgress('');
+      setStartDate('');
+      setEndDate('');
+
+      // 🟢 Notificación inmediata al crear la meta
+      await enviarNotificacionInmediata(
+        '¡Meta creada!',
+        `Has creado la meta "${newGoal.name}". ¡Mucho ánimo! 💪`
+      );
+
+      // 🟡 Notificación programada un día antes de la fecha de fin
+      const fechaFin = new Date(endDate);
+      const fechaRecordatorio = new Date(fechaFin);
+      fechaRecordatorio.setDate(fechaFin.getDate() - 1);
+
+      const hoy = new Date();
+      const diferenciaDias = Math.ceil((fechaRecordatorio - hoy) / (1000 * 60 * 60 * 24));
+
+      if (diferenciaDias === 1) {
+        await enviarNotificacionProgramada(
+          '⏰ Recordatorio de meta',
+          `Mañana vence tu meta "${newGoal.name}". ¡A por ello!`,
+          { date: fechaRecordatorio }
+        );
+      }
+
+      // 2. Obtener las credenciales de Habitica
+      const habiticaUserRef = doc(db, 'habiticaUsers', userId);
+      const habiticaUserDoc = await getDoc(habiticaUserRef);
+
+      if (habiticaUserDoc.exists) {
+        const userIdHabitica = habiticaUserDoc.data()?.userIdHabitica;
+        const apiToken = habiticaUserDoc.data()?.apiToken;
+
+        if (userIdHabitica && apiToken) {
+          // 3. Crear la tarea en Habitica
+          const habiticaResponse = await crearTareaHabitica(newGoal.name, userIdHabitica, apiToken);
+          if (habiticaResponse) {
+            console.log('Tarea creada en Habitica con éxito:', habiticaResponse);
+            
+            // 4. Guardar el taskId en la meta en Firestore
+            const habiticaTaskId = habiticaResponse.data.id;
+            const goalWithHabiticaId = { ...newGoal, habiticaTaskId };
+            await saveGoal(userId, goalWithHabiticaId); // Actualizamos la meta con el taskId
+            setGoals(prev => prev.map(goal => goal.id === newGoal.id ? goalWithHabiticaId : goal));
+          }
+        } else {
+          console.error('No se encontraron los datos de Habitica para este usuario.');
+        }
+      } else {
+        console.error('No se encontró el usuario en Habitica.');
+      }
+    } catch (error) {
+      console.error('Error al guardar la meta:', error);
     }
-  };
+  } else {
+    Alert.alert('Completa todos los campos', 'Por favor, rellena todos los campos para añadir la meta.');
+  }
+};
+
+
+
+  const updateProgress = async (id, progress) => {
+  const updatedGoals = goals.map((goal) =>
+    goal.id === id ? { ...goal, progress } : goal
+  );
+  setGoals(updatedGoals);
+
+  try {
+    await updateGoalProgress(userId, id, progress);
+  } catch (error) {
+    console.error('Error al actualizar progreso:', error);
+  }
+
+  const goal = updatedGoals.find(g => g.id === id);
+  if (goal && goal.progress >= goal.target) {
+    Alert.alert('¡Felicidades!', 'Has cumplido tu objetivo');
+    
+    // Marcar la tarea como completada en Habitica
+    if (goal.habiticaTaskId) {
+      const habiticaUserRef = doc(db, 'habiticaUsers', userId);
+      const habiticaUserDoc = await getDoc(habiticaUserRef);
+
+      if (habiticaUserDoc.exists) {
+        const userIdHabitica = habiticaUserDoc.data()?.userIdHabitica;
+        const apiToken = habiticaUserDoc.data()?.apiToken;
+
+        if (userIdHabitica && apiToken) {
+          // Llamamos a la función para completar la tarea en Habitica
+          await completarTareaHabitica(goal.habiticaTaskId, userIdHabitica, apiToken);
+          console.log('Tarea completada en Habitica');
+        } else {
+          console.error('No se encontraron los datos de Habitica para este usuario.');
+        }
+      } else {
+        console.error('No se encontró el usuario en Habitica.');
+      }
+    }
+  }
+};
 
   const eliminarGoal = (id) => {
     Alert.alert(
