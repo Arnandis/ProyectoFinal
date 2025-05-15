@@ -1,4 +1,4 @@
-import { collection, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, updateDoc,deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 
 // Obtiene todos los retos aceptados donde el usuario participa
@@ -55,4 +55,27 @@ export const restarEstrellas = async (userId, cantidad) => {
   const estrellasActuales = snap.exists() ? snap.data().estrellas || 0 : 0;
   const nuevas = Math.max(0, estrellasActuales - cantidad);
   await updateDoc(ref, { estrellas: nuevas });
+};
+
+export const eliminarReto = async (retoId, userId) => {
+  try {
+    const ref = doc(db, 'retos', retoId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      console.warn('Reto no encontrado');
+      return false;
+    }
+
+    const data = snap.data();
+    if (data.creadorId !== userId && data.retadoId !== userId) {
+      console.warn('Usuario no autorizado para eliminar este reto');
+      return false;
+    }
+
+    await deleteDoc(ref);
+    return true;
+  } catch (error) {
+    console.error('Error eliminando reto:', error);
+    return false;
+  }
 };

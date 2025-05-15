@@ -111,3 +111,110 @@ export const completarTareaHabitica = async (taskId, userIdHabitica, apiToken) =
     throw error;
   }
 };
+
+export const getHabiticaProfile = async (userIdHabitica, apiToken) => {
+  try {
+    const response = await fetch(`https://habitica.com/api/v3/user`, {
+      method: 'GET',
+      headers: {
+        'x-api-user': userIdHabitica,
+        'x-api-key': apiToken,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.data;  // Devuelve la información del perfil
+    } else {
+      const errorData = await response.json();
+      console.error('Error al obtener el perfil de Habitica:', errorData);
+      throw new Error(errorData.message || 'Error al obtener el perfil de Habitica');
+    }
+  } catch (error) {
+    console.error('❌ Error al obtener el perfil de Habitica:', error);
+    throw error;
+  }
+};
+
+// ======================================
+// ✅ Perfil de Habitica
+// ======================================
+
+export const saveHabiticaProfile = async (userId, profileData) => {
+  try {
+    const userRef = doc(db, 'habiticaUsers', userId);
+    await setDoc(userRef, {
+      habiticaProfile: {
+        profile: profileData,
+        updatedAt: new Date().toISOString(),
+      },
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error al guardar el perfil de Habitica:', error);
+    throw error;
+  }
+};
+
+export const getSavedHabiticaProfile = async (userId) => {
+  try {
+    const docSnap = await getDoc(doc(db, 'habiticaUsers', userId));
+    if (docSnap.exists()) {
+      return docSnap.data()?.habiticaProfile || null;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error al obtener perfil guardado de Habitica:', error);
+    throw error;
+  }
+};
+
+export const fetchHabiticaProfileFromAPI = async (userIdHabitica, apiToken) => {
+  try {
+    const response = await fetch('https://habitica.com/api/v3/user', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-user': userIdHabitica,
+        'x-api-key': apiToken,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al obtener perfil de Habitica');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Error conectando con la API de Habitica:', error);
+    throw error;
+  }
+};
+
+export const getOrUpdateHabiticaProfile = async () => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Usuario no autenticado');
+
+    const userId = user.uid;
+    const { userIdHabitica, apiToken } = await getCurrentUserHabiticaCredentials();
+    const cached = await getSavedHabiticaProfile(userId);
+
+    const now = new Date();
+    const updatedAt = cached?.updatedAt ? new Date(cached.updatedAt) : null;
+    const shouldUpdate = !updatedAt || ((now - updatedAt) > 24 * 60 * 60 * 1000); // >1 día
+
+    if (cached?.profile && !shouldUpdate) {
+      return cached.profile;
+    }
+
+    const freshProfile = await fetchHabiticaProfileFromAPI(userIdHabitica, apiToken);
+    await saveHabiticaProfile(userId, freshProfile);
+
+    return freshProfile;
+  } catch (error) {
+    console.error('Error al obtener o actualizar el perfil de Habitica:', error);
+    throw error;
+  }
+};

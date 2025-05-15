@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getOrUpdateHabiticaProfile } from '../services/habiticaService';
 
 const ProfileScreen = () => {
   const db = getFirestore();
@@ -15,10 +16,11 @@ const ProfileScreen = () => {
     bio: '',
     photo: null,
     estrellas: 0,
-    graficosFechas: [], // array de fechas tipo '2025-05-06'
   });
 
-  const [rachaDias, setRachaDias] = useState(0);
+  const [habiticaProfile, setHabiticaProfile] = useState(null);
+  const [loadingHabitica, setLoadingHabitica] = useState(true);
+  const [habiticaAvatarUrl, setHabiticaAvatarUrl] = useState(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -27,41 +29,28 @@ const ProfileScreen = () => {
       try {
         const docRef = doc(db, 'users', userId);
         const docSnap = await getDoc(docRef);
-
         if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUser(data);
-          calcularRacha(data.graficosFechas || []);
+          setUser(docSnap.data());
         }
       } catch (error) {
         console.error('Error al obtener perfil:', error);
       }
     };
 
-    fetchProfile();
-  }, [userId]);
-
-  const calcularRacha = (fechas) => {
-    if (!fechas.length) return setRachaDias(0);
-
-    const fechasOrdenadas = [...fechas].sort().reverse();
-    let racha = 1;
-    let fechaAnterior = new Date(fechasOrdenadas[0]);
-
-    for (let i = 1; i < fechasOrdenadas.length; i++) {
-      const fechaActual = new Date(fechasOrdenadas[i]);
-      const diferencia = (fechaAnterior - fechaActual) / (1000 * 60 * 60 * 24);
-
-      if (diferencia <= 1) {
-        racha++;
-        fechaAnterior = fechaActual;
-      } else {
-        break;
+    const fetchHabitica = async () => {
+      try {
+        const profile = await getOrUpdateHabiticaProfile();
+        setHabiticaProfile(profile);
+      } catch (err) {
+        console.log('No se pudo obtener perfil de Habitica (puede que no esté vinculado):', err.message);
+      } finally {
+        setLoadingHabitica(false);
       }
-    }
+    };
 
-    setRachaDias(racha);
-  };
+    fetchProfile();
+    fetchHabitica();
+  }, [userId]);
 
   const saveProfile = async () => {
     try {
@@ -77,21 +66,20 @@ const ProfileScreen = () => {
   };
 
   const pickImage = async () => {
-  let result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.5,
-    base64: true,
-  });
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
 
-  if (!result.canceled && result.assets?.length > 0) {
-    const base64 = result.assets[0].base64;
-    const uriBase64 = `data:image/jpeg;base64,${base64}`;
-    handleChange('photo', uriBase64);
-  }
-};
-
+    if (!result.canceled && result.assets?.length > 0) {
+      const base64 = result.assets[0].base64;
+      const uriBase64 = `data:image/jpeg;base64,${base64}`;
+      handleChange('photo', uriBase64);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -133,11 +121,26 @@ const ProfileScreen = () => {
           <Text style={styles.statNumber}>{user.estrellas || 0}</Text>
           <Text style={styles.statLabel}>⭐ Estrellas</Text>
         </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>{rachaDias}</Text>
-          <Text style={styles.statLabel}>🔥 Racha</Text>
-        </View>
       </View>
+
+      {/* 🔵 Perfil de Habitica */}
+      {loadingHabitica ? (
+        <ActivityIndicator size="large" color="#0a84ff" />
+      ) : habiticaProfile ? (
+        <View style={styles.habiticaBox}>
+          <Text style={styles.habiticaTitle}>🧙 Perfil de Habitica</Text>
+          <Text>👤 Usuario: {habiticaProfile.profile.name || 'Desconocido'}</Text>
+          <Text>🎮 Nivel: {habiticaProfile.stats?.lvl}</Text>
+          <Text>❤️ HP: {habiticaProfile.stats?.hp}</Text>
+          <Text>⚡ MP: {habiticaProfile.stats?.mp}</Text>
+          <Text>💰 Oro: {habiticaProfile.stats?.gp}</Text>
+          <Text>🏹 Clase: {habiticaProfile.stats?.class}</Text>
+        </View>
+      ) : (
+        <Text style={{ marginTop: 16, color: '#666' }}>
+          No has conectado tu cuenta de Habitica.
+        </Text>
+      )}
 
       <TouchableOpacity style={styles.saveButton} onPress={saveProfile}>
         <Text style={styles.saveButtonText}>Guardar cambios</Text>
@@ -201,6 +204,18 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 14,
     color: '#888',
+  },
+  habiticaBox: {
+    width: '100%',
+    backgroundColor: '#f3f4f6',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  habiticaTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
   saveButton: {
     backgroundColor: '#0a84ff',

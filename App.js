@@ -21,6 +21,7 @@ import RetosActivosScreen from './screens/RetosActivosScreen';
 import DetalleRetoScreen from './screens/DetalleRetoScreen';
 import ArticlesScreen from './screens/ArticlesScreen';
 import HabiticaConnectScreen from './screens/HabiticaConnectScreen';
+import WelcomeScreen from './screens/WelcomeScreen';
 
 const Stack = createStackNavigator();
 
@@ -64,6 +65,7 @@ export default function App() {
           <Stack.Screen name="DetalleReto" component={DetalleRetoScreen} />
           <Stack.Screen name="Articles" component={ArticlesScreen} />
           <Stack.Screen name="Habitica" component={HabiticaConnectScreen} />
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

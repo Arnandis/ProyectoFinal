@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View, TextInput, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { loginWithEmail } from '../../services/authService';
+import { loginWithEmail, resetPasswordWithEmail } from '../../services/authService';
 import { loginStyles } from '../../styles/auth/loginStyles';
 
 import * as WebBrowser from 'expo-web-browser';
@@ -35,7 +35,7 @@ export default function Login({ navigation }) {
         signInWithCredential(auth, credential)
           .then(userCredential => {
             console.log('Usuario logueado con Google:', userCredential.user);
-            navigation.navigate('Finanzas', { uid: userCredential.user.uid });
+            navigation.navigate('Welcome', { uid: userCredential.user.uid });
           })
           .catch(error => {
             console.error('Error al autenticar con Firebase:', error);
@@ -78,13 +78,28 @@ export default function Login({ navigation }) {
         console.log('Usuario ya existente en Firestore');
       }
   
-      navigation.navigate('Finanzas', { uid });
+      navigation.navigate('Welcome', { uid });
   
     } catch (err) {
       console.error(err);
       setError(err.message);
     }
   };
+
+const handlePasswordReset = async () => {
+  if (!email) {
+    setError('Por favor introduce tu email para restablecer la contraseña.');
+    return;
+  }
+
+  try {
+    await resetPasswordWithEmail(email);
+    alert('Te hemos enviado un enlace para restablecer tu contraseña.');
+  } catch (error) {
+    console.error(error);
+    setError('No se pudo enviar el correo. ¿Está bien escrito el email?');
+  }
+};
 
 const [frase, setFrase] = useState('');
 const [autor, setAutor] = useState('');
@@ -150,7 +165,11 @@ useEffect(() => {
         <Text style={loginStyles.buttonText}>Iniciar con Google</Text>
       </TouchableOpacity>
 
-      <Text style={loginStyles.subTitle}>¿No tienes una cuenta?</Text>
+<TouchableOpacity onPress={handlePasswordReset}>
+  <Text style={{ color: '#007bff', marginTop: 10, textAlign: 'center' }}>
+    ¿Olvidaste tu contraseña?
+  </Text>
+</TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Registro')} style={loginStyles.registerButton}>
         <Text style={loginStyles.registerButtonText}>Crear una cuenta</Text>
