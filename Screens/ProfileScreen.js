@@ -133,7 +133,7 @@ const ProfileScreen = () => {
           <Text>🎮 Nivel: {habiticaProfile.stats?.lvl}</Text>
           <Text>❤️ HP: {habiticaProfile.stats?.hp}</Text>
           <Text>⚡ MP: {habiticaProfile.stats?.mp}</Text>
-          <Text>💰 Oro: {habiticaProfile.stats?.gp}</Text>
+          <Text>💰 Oro: {Number(habiticaProfile.stats?.gp).toFixed(2)}</Text>
           <Text>🏹 Clase: {habiticaProfile.stats?.class}</Text>
         </View>
       ) : (

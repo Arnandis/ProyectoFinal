@@ -199,17 +199,11 @@ export const getOrUpdateHabiticaProfile = async () => {
 
     const userId = user.uid;
     const { userIdHabitica, apiToken } = await getCurrentUserHabiticaCredentials();
-    const cached = await getSavedHabiticaProfile(userId);
 
-    const now = new Date();
-    const updatedAt = cached?.updatedAt ? new Date(cached.updatedAt) : null;
-    const shouldUpdate = !updatedAt || ((now - updatedAt) > 24 * 60 * 60 * 1000); // >1 día
-
-    if (cached?.profile && !shouldUpdate) {
-      return cached.profile;
-    }
-
+    // Siempre obtener perfil fresco
     const freshProfile = await fetchHabiticaProfileFromAPI(userIdHabitica, apiToken);
+
+    // Opcional: guarda el perfil en Firestore si aún quieres mantenerlo cacheado
     await saveHabiticaProfile(userId, freshProfile);
 
     return freshProfile;
@@ -218,3 +212,4 @@ export const getOrUpdateHabiticaProfile = async () => {
     throw error;
   }
 };
+
