@@ -5,7 +5,6 @@ const { width } = Dimensions.get('window');
 
 export const tiempoStyles = StyleSheet.create({
   container: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f1f1f1',
@@ -43,4 +42,38 @@ export const tiempoStyles = StyleSheet.create({
     textAlign: 'center',
   },
   chartWidth: width - 30,
+  subtitulo: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#555',
+    marginTop: 30,
+    marginBottom: 10,
+  },
+  resultadoTexto: {
+    fontSize: 16,
+    color: '#444',
+    marginTop: 15,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
 });
