@@ -44,4 +44,41 @@ export const finanzasStyles = StyleSheet.create({
     paddingHorizontal: 15,
     backgroundColor: "#ddd",
   },
+   modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',  // Fondo semitransparente oscuro para el modal
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 25,
+    width: '90%',
+    maxWidth: 350,
+    // Sombra para Android
+    elevation: 10,
+    // Sombra para iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 10,
+    color: '#555',
+  },
+  modalButton: {
+    marginTop: 15,
+    width: '100%',
+  },
 });

@@ -191,3 +191,62 @@ export const getIngresosTotalesPorMes = async (userId, year) => {
   return ingresosMensuales;
 };
 
+//grafico del usuario que ve todas porcentaje en sus categorias: 
+export const getGastosTotalesPorCategoria = async (userId) => {
+  try {
+    const graficos = await getAllGraficos(userId);
+
+    const categorias = ['ocio', 'alquiler', 'festivales', 'compras', 'juegos', 'otros'];
+    const totales = Object.fromEntries(categorias.map(cat => [cat, 0]));
+
+    graficos.forEach(grafico => {
+      categorias.forEach(cat => {
+        const gasto = grafico.gastos?.[cat] || 0;
+        totales[cat] += gasto;
+      });
+    });
+
+    return totales;
+  } catch (error) {
+    console.error('Error al obtener totales por categoría:', error);
+    throw error;
+  }
+};
+
+// Obtener gastos por día y categoría para un mes dado
+export const getGastosPorDiaYCategoriaEnMes = async (userId, year, month) => {
+  try {
+    const graficosRef = collection(db, 'usuarios', userId, 'graficos_finanzas');
+    const querySnapshot = await getDocs(graficosRef);
+
+    // Categorías conocidas
+    const categorias = ['ocio', 'alquiler', 'festivales', 'compras', 'juegos', 'otros'];
+
+    // Inicializamos la estructura resultante: 
+    // { '1': { ocio: 0, alquiler: 0, ... }, '2': {...}, ... }
+    const resultado = {};
+    for(let d = 1; d <= 31; d++) {
+      resultado[d] = {};
+      categorias.forEach(cat => resultado[d][cat] = 0);
+    }
+
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+      if (!data.fecha) return;
+
+      const fecha = new Date(data.fecha);
+      if (fecha.getFullYear() === year && (fecha.getMonth() + 1) === month) {
+        const dia = fecha.getDate();
+        categorias.forEach(cat => {
+          const gasto = data.gastos?.[cat] || 0;
+          resultado[dia][cat] += gasto;
+        });
+      }
+    });
+
+    return resultado; // objeto con días y gastos por categoría
+  } catch (error) {
+    console.error('Error obteniendo gastos por día y categoría:', error);
+    throw error;
+  }
+};
