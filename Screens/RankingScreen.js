@@ -4,7 +4,7 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 
 const RankingScreen = () => {
   const [ranking, setRanking] = useState([]);
@@ -94,7 +94,10 @@ const getPositionChange = (user) => {
             <Pressable onPress={() => navigation.navigate("PerfilAmigo", { id: item.id })}>
               <Text style={styles.name}>{item.name}</Text>
             </Pressable>
-            <Text style={styles.stars}>⭐ {item.estrellas}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <MaterialCommunityIcons name="star" size={16} color="gold" />
+            <Text style={styles.stars}> {item.estrellas}</Text>
+          </View>
           </View>
           <View style={styles.arrow}>{getPositionChange(item)}</View>
           <Pressable

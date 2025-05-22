@@ -53,7 +53,7 @@ const Encabezado = ({ title }) => {
             navigation.navigate('Solicitudes');  // Navegación a la pantalla de Añadir Amigos
           }}
           title="Solicitudes Amistad"
-          leadingIcon="account-plus"
+          leadingIcon="account-multiple-check"
         />
         <Menu.Item
           onPress={() => {
@@ -61,7 +61,7 @@ const Encabezado = ({ title }) => {
             navigation.navigate('RetosRecibidos');  // Navegación a la pantalla de Añadir Amigos
           }}
           title="Retos Recibidos"
-          leadingIcon="account-plus"
+          leadingIcon="sword-cross"
         />
         <Menu.Item
           onPress={() => {
@@ -69,7 +69,7 @@ const Encabezado = ({ title }) => {
             navigation.navigate('Articles');  // Navegación a la pantalla de Añadir Amigos
           }}
           title="Articulos y Consejos"
-          leadingIcon="account-plus"
+          leadingIcon="file-document-multiple"
         />
         <Menu.Item
           onPress={() => {
@@ -77,7 +77,7 @@ const Encabezado = ({ title }) => {
             navigation.navigate('Habitica');  // Navegación a la pantalla de Añadir Amigos
           }}
           title="Habitica"
-          leadingIcon="account-plus"
+          leadingIcon= "gamepad-variant"
         />
       </Menu>
 

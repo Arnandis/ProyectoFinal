@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getOrUpdateHabiticaProfile } from '../services/habiticaService';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const ProfileScreen = () => {
   const db = getFirestore();
@@ -119,7 +120,9 @@ const ProfileScreen = () => {
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
           <Text style={styles.statNumber}>{user.estrellas || 0}</Text>
-          <Text style={styles.statLabel}>⭐ Estrellas</Text>
+          <Text style={styles.statLabel}>
+            <MaterialCommunityIcons name="star" size={16} color="gold" /> Estrellas
+          </Text>
         </View>
       </View>
 
@@ -128,14 +131,28 @@ const ProfileScreen = () => {
         <ActivityIndicator size="large" color="#0a84ff" />
       ) : habiticaProfile ? (
         <View style={styles.habiticaBox}>
-          <Text style={styles.habiticaTitle}>🧙 Perfil de Habitica</Text>
-          <Text>👤 Usuario: {habiticaProfile.profile.name || 'Desconocido'}</Text>
-          <Text>🎮 Nivel: {habiticaProfile.stats?.lvl}</Text>
-          <Text>❤️ HP: {habiticaProfile.stats?.hp}</Text>
-          <Text>⚡ MP: {habiticaProfile.stats?.mp}</Text>
-          <Text>💰 Oro: {Number(habiticaProfile.stats?.gp).toFixed(2)}</Text>
-          <Text>🏹 Clase: {habiticaProfile.stats?.class}</Text>
-        </View>
+  <Text style={styles.habiticaTitle}>
+    <MaterialCommunityIcons name="wizard-hat" size={20} /> Perfil de Habitica
+  </Text>
+  <Text>
+    <MaterialCommunityIcons name="account" size={16} /> Usuario: {habiticaProfile.profile.name || 'Desconocido'}
+  </Text>
+  <Text>
+    <MaterialCommunityIcons name="star" size={16} /> Nivel: {habiticaProfile.stats?.lvl}
+  </Text>
+  <Text>
+    <MaterialCommunityIcons name="heart" size={16} color="red" /> HP: {habiticaProfile.stats?.hp}
+  </Text>
+  <Text>
+    <MaterialCommunityIcons name="flash" size={16} color="blue" /> MP: {habiticaProfile.stats?.mp}
+  </Text>
+  <Text>
+    <MaterialCommunityIcons name="cash" size={16} color="gold" /> Oro: {Number(habiticaProfile.stats?.gp).toFixed(2)}
+  </Text>
+  <Text>
+    <MaterialCommunityIcons name="sword-cross" size={16} /> Clase: {habiticaProfile.stats?.class}
+  </Text>
+</View>
       ) : (
         <Text style={{ marginTop: 16, color: '#666' }}>
           No has conectado tu cuenta de Habitica.

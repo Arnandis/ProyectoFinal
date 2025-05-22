@@ -81,4 +81,34 @@ export const finanzasStyles = StyleSheet.create({
     marginTop: 15,
     width: '100%',
   },
+  inputCard: {
+  width: '100%',
+  backgroundColor: '#f9f9f9',
+  borderRadius: 12,
+  padding: 12,
+  marginBottom: 15,
+  borderWidth: 1,
+  borderColor: '#e0e0e0',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 2,
+},
+
+inputLabel: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#333',
+  marginBottom: 6,
+},
+
+inputField: {
+  backgroundColor: '#fff',
+  padding: 10,
+  borderRadius: 8,
+  fontSize: 16,
+  borderWidth: 1,
+  borderColor: '#ccc',
+},
 });
