@@ -159,7 +159,7 @@ const CrearRetoScreen = () => {
         onChangeText={setUnidad}
       />
 
-      <Text style={styles.label}>Estrellas apostadas (1 - 100)</Text>
+      <Text style={styles.label}>Estrellas apostadas</Text>
       <TextInput
         style={styles.input}
         keyboardType="numeric"

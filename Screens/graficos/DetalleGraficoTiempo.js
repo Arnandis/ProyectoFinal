@@ -12,7 +12,7 @@ import {
   StyleSheet
 } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
-import { getAllGraficosTiempo,updateGraficoTiempo, deleteGraficoTiempo } from '../../services/tiempoService';
+import { getAllGraficosTiempo, updateGraficoTiempo, deleteGraficoTiempo } from '../../services/tiempoService';
 import { getAuth } from 'firebase/auth';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
@@ -89,51 +89,7 @@ export default function DetalleGraficoTiempo({ route }) {
     setModalVisible(true);
   };
 
-  const calcularComparacion = (actual, comparado) => {
-    const tiemposActual = actual.tiempos || {};
-    const tiemposComparado = comparado.tiempos || {};
-
-    const labels = ['trabajo', 'estudio', 'descanso', 'deporte', 'familia', 'otros'];
-    const comparaciones = [];
-
-    const diferencias = labels.map((actividad) => {
-      const actualTiempo = sanitize(tiemposActual[actividad]);
-      const comparadoTiempo = sanitize(tiemposComparado[actividad]);
-      const diferencia = actualTiempo - comparadoTiempo;
-      const porcentaje = comparadoTiempo === 0
-        ? (actualTiempo > 0 ? 100 : 0)
-        : Math.round((diferencia / comparadoTiempo) * 100);
-
-      return {
-        actividad,
-        actual: actualTiempo,
-        comparado: comparadoTiempo,
-        diferencia,
-        porcentaje,
-      };
-    });
-
-    const mayorActual = diferencias.reduce((prev, curr) => curr.actual > prev.actual ? curr : prev, diferencias[0]);
-    const menorActual = diferencias.reduce((prev, curr) => curr.actual < prev.actual ? curr : prev, diferencias[0]);
-
-    comparaciones.push(
-      `🟢 Has pasado más tiempo en **${mayorActual.actividad}**: ${mayorActual.actual} min (${Math.abs(mayorActual.porcentaje)}% ${mayorActual.diferencia >= 0 ? 'más' : 'menos'} que el otro gráfico).`
-    );
-
-    comparaciones.push(
-      `🔵 Has pasado menos tiempo en **${menorActual.actividad}**: ${menorActual.actual} min (${Math.abs(menorActual.porcentaje)}% ${menorActual.diferencia >= 0 ? 'más' : 'menos'} que el otro gráfico).`
-    );
-
-    if (mayorActual.actividad === 'descanso' && mayorActual.actual > 300) {
-      comparaciones.push('💡 Estás dedicando mucho tiempo a descansar. ¿Puedes redistribuir parte de ese tiempo a otras actividades como estudio o deporte?');
-    }
-
-    if (mayorActual.actividad === 'otros' && mayorActual.actual > 200) {
-      comparaciones.push('💡 Gran parte de tu tiempo está en "otros". Considera identificar mejor en qué se va ese tiempo para aprovecharlo más.');
-    }
-
-    return comparaciones;
-  };
+  
 
   const handleCompartirGrafico = async () => {
     try {
@@ -153,11 +109,12 @@ export default function DetalleGraficoTiempo({ route }) {
 
   return (
     <ScrollView style={{ padding: 16 }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-        Detalle del gráfico (Tiempo) - {grafico.fecha}
+      <Text style={styles.sectionTitle}>
+        Detalle de Tiempo - {grafico.fecha}
       </Text>
 
-      <View ref={chartRef} collapsable={false}>
+
+      <View ref={chartRef} collapsable={false} style={styles.chartContainer}>
         <PieChart
           data={crearPieData(grafico)}
           width={width - 30}
@@ -171,63 +128,71 @@ export default function DetalleGraficoTiempo({ route }) {
           absolute
         />
       </View>
-
-      <View style={{ marginTop: 20 }}>
-        <Button title="Editar gráfico" onPress={() => setModalEdicionVisible(true)} color="#4CAF50" />
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalEdicionVisible}
-            onRequestClose={() => setModalEdicionVisible(false)}
-          >
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Editar tiempos</Text>
-                {Object.keys(tiemposEditados).map((key) => (
-                  <View key={key} style={{ marginVertical: 6 }}>
-                    <Text style={{ fontWeight: 'bold' }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
-                    <TextInput
-                      style={styles.input}
-                      keyboardType="numeric"
-                      value={String(tiemposEditados[key])}
-                      onChangeText={(val) =>
-                        setTiemposEditados((prev) => ({
-                          ...prev,
-                          [key]: val,
-                        }))
-                      }
-                    />
-                  </View>
-                ))}
-
-                <Button
-                  title="Guardar cambios"
-                  onPress={async () => {
-                    try {
-                      await updateGraficoTiempo(userId, grafico.fecha, tiemposEditados);
-                      Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
-                      grafico.tiempos = tiemposEditados;
-                      setModalEdicionVisible(false);
-                    } catch (error) {
-                      Alert.alert('Error', 'No se pudo actualizar el gráfico.');
+      <Pressable style={[styles.actionButton, { backgroundColor: '#4a90e2' }]} onPress={handleCompartirGrafico}>
+        <Text style={styles.buttonText}>Compartir gráfico</Text>
+      </Pressable>
+      <Pressable style={[styles.actionButton, { backgroundColor: '#4a90e2' }]} onPress={handleSeleccionarComparar}>
+        <Text style={styles.buttonText}>Comparar con otro gráfico</Text>
+      </Pressable>
+      <View >
+        <Pressable style={[styles.actionButton, { backgroundColor: '#4a90e2' }]} onPress={() => setModalEdicionVisible(true)}>
+          <Text style={styles.buttonText}>Editar gráfico</Text>
+        </Pressable>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalEdicionVisible}
+          onRequestClose={() => setModalEdicionVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Editar tiempos</Text>
+              {Object.keys(tiemposEditados).map((key) => (
+                <View key={key} style={{ marginVertical: 6 }}>
+                  <Text style={{ fontWeight: 'bold' }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="numeric"
+                    value={String(tiemposEditados[key])}
+                    onChangeText={(val) =>
+                      setTiemposEditados((prev) => ({
+                        ...prev,
+                        [key]: val,
+                      }))
                     }
-                  }}
-                  color="#2196F3"
-                />
+                  />
+                </View>
+              ))}
 
-                <View style={{ height: 10 }} />
-                <Button title="Cancelar" onPress={() => setModalEdicionVisible(false)} color="#999" />
-              </View>
+              <Button
+                title="Guardar cambios"
+                onPress={async () => {
+                  try {
+                    await updateGraficoTiempo(userId, grafico.fecha, tiemposEditados);
+                    Alert.alert('Éxito', 'Gráfico actualizado correctamente.');
+                    grafico.tiempos = tiemposEditados;
+                    setModalEdicionVisible(false);
+                  } catch (error) {
+                    Alert.alert('Error', 'No se pudo actualizar el gráfico.');
+                  }
+                }}
+                color="#2196F3"
+              />
+
+              <View style={{ height: 10 }} />
+              <Button title="Cancelar" onPress={() => setModalEdicionVisible(false)} color="#999" />
             </View>
-          </Modal>
+          </View>
+        </Modal>
 
         <View style={{ height: 10 }} />
-        <Button title="Eliminar gráfico" onPress={handleEliminar} color="#F44336" />
+        <Pressable style={[styles.actionButton, { backgroundColor: '#ff4d4d' }]} onPress={handleEliminar}>
+          <Text style={styles.buttonText}>Eliminar gráfico</Text>
+        </Pressable>
+
+
       </View>
 
-      <Button title="Compartir gráfico" onPress={handleCompartirGrafico} />
-
-      <Button title="Comparar con otro gráfico" onPress={handleSeleccionarComparar} style={{ marginTop: 12 }} />
 
       {/* MODAL DE SELECCIÓN */}
       <Modal
@@ -278,17 +243,6 @@ export default function DetalleGraficoTiempo({ route }) {
             paddingLeft="15"
             absolute
           />
-
-          <Text style={{ fontSize: 16, fontWeight: 'bold', marginTop: 16 }}>
-            Comparación personalizada:
-          </Text>
-          {calcularComparacion(grafico, otroGrafico).map((linea, idx) => (
-            <Text key={idx} style={{ marginBottom: 6 }}>{linea}</Text>
-          ))}
-
-          <View style={{ marginTop: 12 }}>
-            <Button title="Compartir gráfico con comparación" onPress={handleCompartirGrafico} />
-          </View>
         </>
       )}
     </ScrollView>
@@ -299,24 +253,76 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     paddingHorizontal: 20,
   },
   modalContainer: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 16,
-    maxHeight: '80%',
+    backgroundColor: '#fff',
+    padding: 24,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
   },
   modalItem: {
     paddingVertical: 12,
-    borderBottomColor: '#ccc',
+    borderBottomColor: '#e0e0e0',
     borderBottomWidth: 1,
   },
-  
+  input: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#222',
+    marginVertical: 12,
+  },
+  chartContainer: {
+    marginTop: 16,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    padding: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  button: {
+    borderRadius: 12,
+    marginVertical: 6,
+  },
+  actionButton: {
+    marginVertical: 6,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
+

@@ -61,43 +61,6 @@ const [gastosEditados, setGastosEditados] = useState({ ...grafico.gastos });
     setModalVisible(true);
   };
 
-  const calcularComparacion = (actual, comparado) => {
-    const gastosActual = actual.gastos || {};
-    const gastosComparado = comparado.gastos || {};
-
-    const labels = ['ocio', 'alquiler', 'festivales', 'compras', 'juegos', 'otros'];
-    const comparaciones = [];
-
-    const diferencias = labels.map((gasto) => {
-      const actualGasto = sanitize(gastosActual[gasto]);
-      const comparadoGasto = sanitize(gastosComparado[gasto]);
-      const diferencia = actualGasto - comparadoGasto;
-      const porcentaje = comparadoGasto === 0
-        ? (actualGasto > 0 ? 100 : 0)
-        : Math.round((diferencia / comparadoGasto) * 100);
-
-      return {
-        gasto,
-        actual: actualGasto,
-        comparado: comparadoGasto,
-        diferencia,
-        porcentaje,
-      };
-    });
-
-    const mayorActual = diferencias.reduce((prev, curr) => curr.actual > prev.actual ? curr : prev, diferencias[0]);
-    const menorActual = diferencias.reduce((prev, curr) => curr.actual < prev.actual ? curr : prev, diferencias[0]);
-
-    comparaciones.push(
-      `🟢 Has gastado más en **${mayorActual.gasto}**: ${mayorActual.actual}€ (${Math.abs(mayorActual.porcentaje)}% ${mayorActual.diferencia >= 0 ? 'más' : 'menos'} que el otro gráfico).`
-    );
-
-    comparaciones.push(
-      `🔵 Has gastado menos en **${menorActual.gasto}**: ${menorActual.actual}€ (${Math.abs(menorActual.porcentaje)}% ${menorActual.diferencia >= 0 ? 'más' : 'menos'} que el otro gráfico).`
-    );
-
-    return comparaciones;
-  };
 
   const handleEliminarGrafico = () => {
     Alert.alert(
@@ -272,17 +235,6 @@ const [gastosEditados, setGastosEditados] = useState({ ...grafico.gastos });
             }}
             style={{ marginVertical: 20, borderRadius: 16 }}
           />
-
-          <Text style={{ fontSize: 16, fontWeight: 'bold', marginTop: 16 }}>
-            Comparación personalizada:
-          </Text>
-          {calcularComparacion(grafico, otroGrafico).map((linea, idx) => (
-            <Text key={idx} style={{ marginBottom: 6 }}>{linea}</Text>
-          ))}
-
-          <View style={{ marginTop: 12 }}>
-            <Button title="Compartir gráfico con comparación" onPress={handleCompartirGrafico} />
-          </View>
         </>
       )}
     </ScrollView>

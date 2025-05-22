@@ -232,7 +232,6 @@ export const getEvolucionMensualCategorias = async (userId, meses = 6) => {
     const now = new Date();
     const resultados = {};
 
-    // Inicializar meses: últimos 'meses' meses con etiquetas "MMM YYYY"
     for (let i = meses - 1; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
