@@ -106,12 +106,7 @@ export default function SolicitudesAmistadScreen() {
                   <Text style={styles.buttonText}>Rechazar</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.button, styles.viewProfileButton]}
-                  onPress={() => navigation.navigate('PerfilUsuario', { userId: item.id })}
-                >
-                  <Text style={styles.buttonText}>Ver perfil</Text>
-                </TouchableOpacity>
+          
               </View>
             </View>
           )}

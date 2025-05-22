@@ -66,12 +66,12 @@ export default function AñadirAmigosScreen() {
         style={styles.list}
       />
       {loading ? (
-  <ActivityIndicator size="small" />
-) : (
-  <TouchableOpacity style={styles.button} onPress={handleEnviar}>
-    <Text style={styles.buttonText}>Enviar solicitud</Text>
-  </TouchableOpacity>
-)}
+        <ActivityIndicator size="small" />
+      ) : (
+        <TouchableOpacity style={styles.button} onPress={handleEnviar}>
+          <Text style={styles.buttonText}>Enviar solicitud</Text>
+        </TouchableOpacity>
+      )}
 
     </View>
   );

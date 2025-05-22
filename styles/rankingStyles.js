@@ -1,53 +1,82 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
-const rankingStyles = StyleSheet.create({
-    container: { 
-      flex: 1, 
-      padding: 20, 
-      backgroundColor: "#F8F9FA" },
-  
-    title: { 
-      fontSize: 24, 
-      fontWeight: "bold", 
-      textAlign: "center", 
-      marginBottom: 20 },
-    
-      filterContainer: { 
-        flexDirection: "row",
-        justifyContent: "center", 
-        marginBottom: 15 },
-        
-      filterButton: { 
-        paddingVertical: 8,
-        paddingHorizontal: 15, 
-        backgroundColor: "#ddd", 
-        borderRadius: 20,
-        marginHorizontal: 5 
-      },
-    activeFilter: { 
-      backgroundColor: "#007BFF" },
-    
-    filterText: { 
-      fontSize: 16, 
-      fontWeight: "600", 
-      color: "#fff" },
-  
-    card: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#fff",
-      padding: 15,
-      marginVertical: 8,
-      borderRadius: 10,
-      shadowColor: "#000",
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    medal: { fontSize: 30, marginRight: 10 },
-    avatar: { width: 50, height: 50, borderRadius: 25 },
-    info: { flex: 1 },
-    name: { fontSize: 18, fontWeight: "bold" },
-    category: { color: "#666" },
-    hours: { fontSize: 16, fontWeight: "600", color: "#007BFF" },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F4F6F8",
+    paddingHorizontal: 15,
+    paddingTop: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#333",
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    marginVertical: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  position: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginRight: 10,
+    color: "#555",
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  info: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  stars: {
+    color: "#FFD700",
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  arrow: {
+    marginRight: 10,
+  },
+  retarButton: {
+    backgroundColor: "#2563EB",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  retarText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  verRetosButton: {
+    backgroundColor: "#2563EB",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignSelf: "center",
+    marginBottom: 10,
+  },
+  verRetosText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+});
+
+export default styles;
